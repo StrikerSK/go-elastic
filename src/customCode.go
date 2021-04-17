@@ -1,6 +1,9 @@
 package src
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
 func createExampleType(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -11,8 +14,17 @@ func createExampleType(w http.ResponseWriter, r *http.Request) {
 		Done:        false,
 	}
 
-	if _, err := w.Write(customTodo.marshalTodo()); err != nil {
+	marshalled, err := customTodo.MarshalItem()
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		log.Fatal(err)
+		return
+	}
+
+	if _, err = w.Write(marshalled); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Fatal(err)
+		return
 	}
 }
 

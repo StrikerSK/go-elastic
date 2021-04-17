@@ -5,15 +5,19 @@ import (
 	"log"
 )
 
+type CustomInterface interface {
+	MarshalItem() ([]byte, error)
+}
+
 type Todo struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Done        bool   `json:"isDone"`
 }
 
-func (todo Todo) marshalTodo() []byte {
-	dataJSON, _ := json.Marshal(todo)
-	return dataJSON
+func (todo Todo) MarshalItem() ([]byte, error) {
+	dataJSON, err := json.Marshal(todo)
+	return dataJSON, err
 }
 
 func CreateTodoIndexBody() []byte {

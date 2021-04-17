@@ -2,6 +2,7 @@ package src
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/olivere/elastic"
 	"io/ioutil"
@@ -16,7 +17,7 @@ var ESConfiguration = InitializeElasticSearchClient()
 func InitializeElasticSearchClient() ElasticConfiguration {
 	client, err := elastic.NewClient(
 		elastic.SetSniff(false),
-		elastic.SetURL("http://localhost:9200"),
+		elastic.SetURL(HOST_URL),
 		elastic.SetHealthcheckInterval(5*time.Second),
 	)
 
@@ -37,17 +38,17 @@ type ElasticConfiguration struct {
 func (elastic ElasticConfiguration) CreateElasticIndex() {
 	ctx := context.Background()
 
-	exists, err := elastic.ElasticClient.IndexExists(todosIndex).Do(ctx)
+	exists, err := elastic.ElasticClient.IndexExists(TODOS_INDEX).Do(ctx)
 	if err != nil {
 		log.Fatalf("IndexExists() ERROR: %v\n", err)
 	} else if exists {
-		fmt.Printf("The index %s already exists.", todosIndex)
-		if _, err = elastic.ElasticClient.DeleteIndex(todosIndex).Do(ctx); err != nil {
+		fmt.Printf("The index %s already exists.", TODOS_INDEX)
+		if _, err = elastic.ElasticClient.DeleteIndex(TODOS_INDEX).Do(ctx); err != nil {
 			log.Fatalf("client.DeleteIndex() ERROR: %v\n", err)
 		}
 	}
 
-	create, err := elastic.ElasticClient.CreateIndex(todosIndex).Body(string(CreateTodoIndexBody())).Do(ctx)
+	create, err := elastic.ElasticClient.CreateIndex(TODOS_INDEX).Body(string(CreateTodoIndexBody())).Do(ctx)
 	if err != nil {
 		log.Fatalf("CreateIndex() ERROR: %v\n", err)
 	} else {
@@ -55,11 +56,12 @@ func (elastic ElasticConfiguration) CreateElasticIndex() {
 	}
 }
 
-func (elastic ElasticConfiguration) createData(todo Todo) {
-	url := "http://localhost:9200/custom_todos/_doc"
+func (elastic ElasticConfiguration) createData(object CustomInterface) {
+	url := HOST_URL + "/" + TODOS_INDEX + "/_doc"
 	method := "POST"
 
-	payload := strings.NewReader(string(todo.marshalTodo()))
+	marshalledObject, _ := object.MarshalItem()
+	payload := strings.NewReader(string(marshalledObject))
 
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, payload)
@@ -83,5 +85,11 @@ func (elastic ElasticConfiguration) createData(todo Todo) {
 		fmt.Println(err)
 		return
 	}
+	log.Print("Custom object created successfully!")
+
+	m := make(map[string]string)
+	_ = json.Unmarshal(body, &m)
+
+	fmt.Println(m["_id"])
 	fmt.Println(string(body))
 }
