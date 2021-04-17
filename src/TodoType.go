@@ -41,10 +41,6 @@ func CreateTodoIndexBody() []byte {
 		Type: "boolean",
 	}
 
-	//propertyMap["type"] = property{
-	//	Type: "text",
-	//}
-
 	elasticBody := elasticBody{
 		Settings: settings{
 			NumberOfShards:   1,

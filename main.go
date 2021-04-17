@@ -19,7 +19,10 @@ func main() {
 	}
 
 	myRouter := mux.NewRouter().StrictSlash(true)
+
 	src.EnrichRouter(myRouter)
+	src.EnrichRouterWithExamples(myRouter)
+
 	fmt.Println("Listening")
 
 	fmt.Println(http.ListenAndServe(":"+port, myRouter))

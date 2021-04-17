@@ -1,9 +1,18 @@
 package src
 
 import (
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
+
+func EnrichRouterWithExamples(mainRouter *mux.Router) {
+
+	exampleRouter := mainRouter.PathPrefix("/example").Subrouter()
+	exampleRouter.HandleFunc("/index", createExampleIndexBody).Methods("GET")
+	exampleRouter.HandleFunc("/type", createExampleType).Methods("GET")
+
+}
 
 func createExampleType(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

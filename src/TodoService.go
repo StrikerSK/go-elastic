@@ -2,38 +2,84 @@ package src
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
-func createTodo(w http.ResponseWriter, r *http.Request) {
-	var todo Todo
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&todo)
+func createData(object CustomInterface) string {
+	url := HOST_URL + "/" + TODOS_INDEX + "/_doc"
+	method := "POST"
+
+	marshalledObject, _ := object.MarshalItem()
+	payload := strings.NewReader(string(marshalledObject))
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, payload)
+
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Print(err.Error())
-		return
+		fmt.Println(err)
+		return ""
 	}
-	ESConfiguration.createData(todo)
+
+	req.Header.Add("Content-Type", "application/json")
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	log.Print("Custom object created successfully!")
+
+	m := make(map[string]string)
+	_ = json.Unmarshal(body, &m)
+
+	fmt.Println(string(body))
+	return m["_id"]
 }
 
-func readTodo(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	todoID, ok := vars["id"]
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatal("property [id] does no exist")
-		return
-	}
+func getTodo(todoID string) (todo Todo) {
 
-	persistedTodo, err := ESConfiguration.getTodo(todoID).MarshalItem()
+	url := HOST_URL + "/" + TODOS_INDEX + "/_doc/" + todoID
+	method := "GET"
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
+
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(persistedTodo)
+	if res.StatusCode == http.StatusOK {
+		m := make(map[string]interface{})
+		_ = json.Unmarshal(body, &m)
+
+		todo.ResolveMap(m["_source"].(map[string]interface{}))
+		return
+	} else {
+		log.Println("Something went wrong at getTodo()")
+		return
+	}
 }
