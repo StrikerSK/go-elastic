@@ -93,3 +93,35 @@ func (elastic ElasticConfiguration) createData(object CustomInterface) {
 	fmt.Println(m["_id"])
 	fmt.Println(string(body))
 }
+
+func (elastic ElasticConfiguration) getTodo(todoID string) (todo Todo) {
+
+	url := HOST_URL + "/" + TODOS_INDEX + "/_doc/" + todoID
+	method := "GET"
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	m := make(map[string]interface{})
+	_ = json.Unmarshal(body, &m)
+
+	todo.ResolveMap(m["_source"].(map[string]interface{}))
+	return
+}

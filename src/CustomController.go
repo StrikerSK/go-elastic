@@ -15,5 +15,6 @@ func EnrichRouter(mainRouter *mux.Router) {
 
 	todoRouter := mainRouter.PathPrefix("/todo").Subrouter()
 	todoRouter.HandleFunc("", createTodo).Methods("POST")
+	todoRouter.HandleFunc("/{id}", readTodo).Methods("GET")
 
 }

@@ -12,12 +12,19 @@ type CustomInterface interface {
 type Todo struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Done        bool   `json:"isDone"`
+	Done        bool   `json:"done"`
 }
 
 func (todo Todo) MarshalItem() ([]byte, error) {
 	dataJSON, err := json.Marshal(todo)
 	return dataJSON, err
+}
+
+func (todo *Todo) ResolveMap(inputMap map[string]interface{}) {
+	todo.Name = inputMap["name"].(string)
+	todo.Description = inputMap["description"].(string)
+	todo.Done = inputMap["done"].(bool)
+	return
 }
 
 func CreateTodoIndexBody() []byte {
@@ -30,7 +37,7 @@ func CreateTodoIndexBody() []byte {
 		Type: "text",
 	}
 
-	propertyMap["isDone"] = property{
+	propertyMap["done"] = property{
 		Type: "boolean",
 	}
 
