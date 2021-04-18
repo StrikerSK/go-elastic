@@ -47,7 +47,7 @@ func createData(object CustomInterface) string {
 	return m["_id"]
 }
 
-func getTodo(todoID string) (todo Todo) {
+func getTodo(todoID string) (todo map[string]interface{}) {
 
 	url := HOST_URL + "/" + TODOS_INDEX + "/_doc/" + todoID
 	method := "GET"
@@ -76,7 +76,7 @@ func getTodo(todoID string) (todo Todo) {
 		m := make(map[string]interface{})
 		_ = json.Unmarshal(body, &m)
 
-		todo.ResolveMap(m["_source"].(map[string]interface{}))
+		todo = m["_source"].(map[string]interface{})
 		return
 	} else {
 		log.Println("Something went wrong at getTodo()")

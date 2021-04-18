@@ -1,0 +1,318 @@
+{
+	"info": {
+		"_postman_id": "2a6936fb-bae7-48ba-a842-b534eb8eb398",
+		"name": "Elastic Search",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Custom requests",
+			"item": [
+				{
+					"name": "Create CustomTodo Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"DOCUMENT_ID\", pm.response.json().data);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:5000/todo",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"todo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get CustomTodo Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:5000/todo/{{DOCUMENT_ID}}",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"todo",
+								"{{DOCUMENT_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Elastic Requests",
+			"item": [
+				{
+					"name": "Check Elastic Server",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:9200",
+							"host": [
+								"localhost"
+							],
+							"port": "9200"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\":\"Alice\",\n\t\"age\":17,\n\t\"average_score\":81.1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:9200/students/_doc",
+							"host": [
+								"localhost"
+							],
+							"port": "9200",
+							"path": [
+								"students",
+								"_doc"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Studens Index",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:9200/students",
+							"host": [
+								"localhost"
+							],
+							"port": "9200",
+							"path": [
+								"students"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create CustomTodo Index",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"settings\": {\n        \"number_of_shards\": 1,\n        \"number_of_replicas\": 1\n    },\n    \"mappings\": {\n        \"properties\": {\n            \"description\": {\n                \"type\": \"text\"\n            },\n            \"done\": {\n                \"type\": \"boolean\"\n            },\n            \"name\": {\n                \"type\": \"text\"\n            }\n        }\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:9200/custom_todos",
+							"host": [
+								"localhost"
+							],
+							"port": "9200",
+							"path": [
+								"custom_todos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get CustomTodo Index",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:9200/custom_todos",
+							"host": [
+								"localhost"
+							],
+							"port": "9200",
+							"path": [
+								"custom_todos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create CustomTodo Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"DOCUMENT_ID\", pm.response.json()[\"_id\"]);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:9200/custom_todos/_doc",
+							"host": [
+								"localhost"
+							],
+							"port": "9200",
+							"path": [
+								"custom_todos",
+								"_doc"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update CustomTodo Data",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Create Updated Todo\",\n    \"description\": \"I have to update todo\",\n    \"done\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:9200/custom_todos/_doc/{{DOCUMENT_ID}}",
+							"host": [
+								"localhost"
+							],
+							"port": "9200",
+							"path": [
+								"custom_todos",
+								"_doc",
+								"{{DOCUMENT_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search CustomTodo Data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": {\n        \"match\": {\n            \"name\": \"todo\"\n        }\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:9200/custom_todos/_search",
+							"host": [
+								"localhost"
+							],
+							"port": "9200",
+							"path": [
+								"custom_todos",
+								"_search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read CustomTodo Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:9200/custom_todos/_doc/{{DOCUMENT_ID}}",
+							"host": [
+								"localhost"
+							],
+							"port": "9200",
+							"path": [
+								"custom_todos",
+								"_doc",
+								"{{DOCUMENT_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CustomTodo Data",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:9200/custom_todos/_doc/{{DOCUMENT_ID}}",
+							"host": [
+								"localhost"
+							],
+							"port": "9200",
+							"path": [
+								"custom_todos",
+								"_doc",
+								"{{DOCUMENT_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
