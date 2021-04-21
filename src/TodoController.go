@@ -26,16 +26,14 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
 		return
-	} else {
-		w.Header().Set("Content-Type", "application/json")
-
-		outputData, _ := json.Marshal(RequestResponse{
-			Data:   createData(todo),
-			Status: "Data Created",
-		})
-
-		_, _ = w.Write(outputData)
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	responseData := createData(todo)
+	outputData, _ := json.Marshal(responseData)
+	w.WriteHeader(responseData.Code)
+	_, _ = w.Write(outputData)
+
 }
 
 func readTodo(w http.ResponseWriter, r *http.Request) {
@@ -48,11 +46,8 @@ func readTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
-	outputData, _ := json.Marshal(RequestResponse{
-		Data:   getTodo(todoID),
-		Status: "Data Fetched",
-	})
-
+	responseData := getTodo(todoID)
+	outputData, _ := json.Marshal(getTodo(todoID))
+	w.WriteHeader(responseData.Code)
 	_, _ = w.Write(outputData)
 }

@@ -3,25 +3,30 @@ package src
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/tidwall/gjson"
+	"go-elastic/src/response"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 )
 
-func createData(object CustomInterface) string {
-	url := HOST_URL + "/" + TODOS_INDEX + "/_doc"
-	method := "POST"
+const todoIndexUrl = HOST_URL + "/" + TODOS_INDEX + "/_doc"
 
+func createData(object CustomInterface) response.RequestResponse {
 	marshalledObject, _ := object.MarshalItem()
 	payload := strings.NewReader(string(marshalledObject))
 
 	client := &http.Client{}
-	req, err := http.NewRequest(method, url, payload)
+	req, err := http.NewRequest("POST", todoIndexUrl, payload)
 
 	if err != nil {
 		fmt.Println(err)
-		return ""
+		return response.RequestResponse{
+			Data:   err,
+			Status: "Error",
+			Code:   400,
+		}
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -29,57 +34,109 @@ func createData(object CustomInterface) string {
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return ""
+		return response.RequestResponse{
+			Data:   err,
+			Status: "Error",
+			Code:   http.StatusInternalServerError,
+		}
 	}
-	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
-		return "nil"
+		return response.RequestResponse{
+			Data:   err,
+			Status: "Error",
+			Code:   http.StatusInternalServerError,
+		}
 	}
-	log.Print("Custom object created successfully!")
 
-	m := make(map[string]string)
-	_ = json.Unmarshal(body, &m)
-
-	fmt.Println(string(body))
-	return m["_id"]
+	if res.StatusCode == http.StatusCreated {
+		log.Print("Custom object created successfully!")
+		value := gjson.Get(string(body), "_id")
+		return response.RequestResponse{
+			Data:   value.String(),
+			Status: "Data created",
+			Code:   http.StatusCreated,
+		}
+	} else {
+		value := gjson.Get(string(body), "error.reason")
+		fmt.Printf("Retrieved error message: %s", value.String())
+		return response.RequestResponse{
+			Data:   body,
+			Status: res.Status,
+			Code:   res.StatusCode,
+		}
+	}
 }
 
-func getTodo(todoID string) (todo map[string]interface{}) {
-
-	url := HOST_URL + "/" + TODOS_INDEX + "/_doc/" + todoID
-	method := "GET"
+func getTodo(todoID string) response.RequestResponse {
 
 	client := &http.Client{}
-	req, err := http.NewRequest(method, url, nil)
+	req, err := http.NewRequest("GET", todoIndexUrl+"/"+todoID, nil)
 
 	if err != nil {
 		fmt.Println(err)
-		return
+		return response.RequestResponse{
+			Data:   err,
+			Status: "Error",
+			Code:   http.StatusInternalServerError,
+		}
 	}
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return response.RequestResponse{
+			Data:   err,
+			Status: "Error",
+			Code:   http.StatusInternalServerError,
+		}
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return response.RequestResponse{
+			Data:   err,
+			Status: "Error",
+			Code:   http.StatusInternalServerError,
+		}
 	}
 
-	if res.StatusCode == http.StatusOK {
+	switch res.StatusCode {
+	case http.StatusOK:
 		m := make(map[string]interface{})
 		_ = json.Unmarshal(body, &m)
-
-		todo = m["_source"].(map[string]interface{})
-		return
-	} else {
-		log.Println("Something went wrong at getTodo()")
-		return
+		value := gjson.Get(string(body), "_source")
+		fmt.Printf("Retrieved todo: %s\n", value.String())
+		return response.RequestResponse{
+			Data:   m["_source"].(map[string]interface{}),
+			Status: "Todo retrieved",
+			Code:   http.StatusOK,
+		}
+	case http.StatusNotFound:
+		log.Print("Todo not found")
+		return response.RequestResponse{
+			Data:   "Cannot find requested todo " + todoID,
+			Status: "Todo not found",
+			Code:   http.StatusNotFound,
+		}
+	//case http.StatusBadRequest:
+	//	value := gjson.Get(string(body), "error.reason")
+	//	log.Println("Something went wrong at getTodo()")
+	//	fmt.Printf("Retrieved id: %s\n", value.String())
+	//	return response.RequestResponse{
+	//		Data:   "Something went wrong",
+	//		Status: "Error",
+	//		Code:   http.StatusBadRequest,
+	//	}
+	default:
+		log.Printf("Unexpected error occurred \n")
+		return response.RequestResponse{
+			Data:   "Unexpected error occurred",
+			Status: "Error",
+			Code:   http.StatusBadRequest,
+		}
 	}
 }
