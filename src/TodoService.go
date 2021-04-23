@@ -11,14 +11,18 @@ import (
 	"strings"
 )
 
-const todoIndexUrl = HOST_URL + "/" + TODOS_INDEX + "/_doc"
+const (
+	todoIndexUrl    = HOST_URL + "/" + TODOS_INDEX
+	todoDocumentUrl = todoIndexUrl + "/_doc"
+	todoSearchUrl   = todoIndexUrl + "/_search"
+)
 
 func createData(object CustomInterface) response.RequestResponse {
 	marshalledObject, _ := object.MarshalItem()
 	payload := strings.NewReader(string(marshalledObject))
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", todoIndexUrl, payload)
+	req, err := http.NewRequest("POST", todoDocumentUrl, payload)
 
 	if err != nil {
 		fmt.Println(err)
@@ -73,7 +77,7 @@ func createData(object CustomInterface) response.RequestResponse {
 func getTodo(todoID string) response.RequestResponse {
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", todoIndexUrl+"/"+todoID, nil)
+	req, err := http.NewRequest("GET", todoDocumentUrl+"/"+todoID, nil)
 
 	if err != nil {
 		fmt.Println(err)
@@ -88,7 +92,7 @@ func getTodo(todoID string) response.RequestResponse {
 		fmt.Println(err)
 		return response.RequestResponse{
 			Data:   err,
-			Status: "Error",
+			Status: "Request error",
 			Code:   http.StatusInternalServerError,
 		}
 	}
@@ -99,7 +103,7 @@ func getTodo(todoID string) response.RequestResponse {
 		fmt.Println(err)
 		return response.RequestResponse{
 			Data:   err,
-			Status: "Error",
+			Status: "Response body error",
 			Code:   http.StatusInternalServerError,
 		}
 	}
@@ -108,8 +112,6 @@ func getTodo(todoID string) response.RequestResponse {
 	case http.StatusOK:
 		m := make(map[string]interface{})
 		_ = json.Unmarshal(body, &m)
-		value := gjson.Get(string(body), "_source")
-		fmt.Printf("Retrieved todo: %s\n", value.String())
 		return response.RequestResponse{
 			Data:   m["_source"].(map[string]interface{}),
 			Status: "Todo retrieved",
