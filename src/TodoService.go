@@ -142,3 +142,49 @@ func getTodo(todoID string) response.RequestResponse {
 		}
 	}
 }
+
+func deleteTodo(todoID string) response.RequestResponse {
+
+	client := &http.Client{}
+	req, err := http.NewRequest("DELETE", todoDocumentUrl+"/"+todoID, nil)
+
+	if err != nil {
+		fmt.Println(err)
+		return response.RequestResponse{
+			Data:   err,
+			Status: "Error",
+			Code:   http.StatusInternalServerError,
+		}
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return response.RequestResponse{
+			Data:   err,
+			Status: "Request error",
+			Code:   http.StatusInternalServerError,
+		}
+	}
+	defer res.Body.Close()
+
+	_, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return response.RequestResponse{
+			Data:   err,
+			Status: "Response body error",
+			Code:   http.StatusInternalServerError,
+		}
+	}
+
+	if res.StatusCode == http.StatusNotFound {
+		log.Printf("Todo not found")
+	}
+
+	return response.RequestResponse{
+		Data:   nil,
+		Status: "Todo deleted",
+		Code:   http.StatusOK,
+	}
+}
