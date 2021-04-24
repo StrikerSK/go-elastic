@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/tidwall/gjson"
 	"go-elastic/src/response"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 )
 
 const (
-	todoIndexUrl    = HOST_URL + "/" + TODOS_INDEX
+	todoIndexUrl    = HostUrl + "/" + TodosIndex
 	todoDocumentUrl = todoIndexUrl + "/_doc"
 	todoSearchUrl   = todoIndexUrl + "/_search"
 )
@@ -21,38 +22,9 @@ func createData(object CustomInterface) response.RequestResponse {
 	marshalledObject, _ := object.MarshalItem()
 	payload := strings.NewReader(string(marshalledObject))
 
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", todoDocumentUrl, payload)
-
+	res, body, err := sendRequest(todoDocumentUrl, "POST", payload)
 	if err != nil {
-		fmt.Println(err)
-		return response.RequestResponse{
-			Data:   err,
-			Status: "Error",
-			Code:   400,
-		}
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return response.RequestResponse{
-			Data:   err,
-			Status: "Error",
-			Code:   http.StatusInternalServerError,
-		}
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return response.RequestResponse{
-			Data:   err,
-			Status: "Error",
-			Code:   http.StatusInternalServerError,
-		}
+		log.Printf("createData() read failed: %s\n", err)
 	}
 
 	if res.StatusCode == http.StatusCreated {
@@ -76,36 +48,9 @@ func createData(object CustomInterface) response.RequestResponse {
 
 func getTodo(todoID string) response.RequestResponse {
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", todoDocumentUrl+"/"+todoID, nil)
-
+	res, body, err := sendRequest(todoDocumentUrl+"/"+todoID, "GET", nil)
 	if err != nil {
-		fmt.Println(err)
-		return response.RequestResponse{
-			Data:   err,
-			Status: "Error",
-			Code:   http.StatusInternalServerError,
-		}
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return response.RequestResponse{
-			Data:   err,
-			Status: "Request error",
-			Code:   http.StatusInternalServerError,
-		}
-	}
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return response.RequestResponse{
-			Data:   err,
-			Status: "Response body error",
-			Code:   http.StatusInternalServerError,
-		}
+		log.Printf("getTodo() [%s] read failed: %s\n", todoID, err)
 	}
 
 	switch res.StatusCode {
@@ -145,41 +90,13 @@ func getTodo(todoID string) response.RequestResponse {
 
 func deleteTodo(todoID string) response.RequestResponse {
 
-	client := &http.Client{}
-	req, err := http.NewRequest("DELETE", todoDocumentUrl+"/"+todoID, nil)
-
+	res, _, err := sendRequest(todoDocumentUrl+"/"+todoID, "DELETE", nil)
 	if err != nil {
-		fmt.Println(err)
-		return response.RequestResponse{
-			Data:   err,
-			Status: "Error",
-			Code:   http.StatusInternalServerError,
-		}
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return response.RequestResponse{
-			Data:   err,
-			Status: "Request error",
-			Code:   http.StatusInternalServerError,
-		}
-	}
-	defer res.Body.Close()
-
-	_, err = ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return response.RequestResponse{
-			Data:   err,
-			Status: "Response body error",
-			Code:   http.StatusInternalServerError,
-		}
+		log.Printf("deleteTodo() [%s] failed: %s\n", todoID, err)
 	}
 
 	if res.StatusCode == http.StatusNotFound {
-		log.Printf("Todo not found")
+		log.Printf("Todo [%s] not found\n", todoID)
 	}
 
 	return response.RequestResponse{
@@ -187,4 +104,27 @@ func deleteTodo(todoID string) response.RequestResponse {
 		Status: "Todo deleted",
 		Code:   http.StatusOK,
 	}
+}
+
+func sendRequest(requestUrl, requestMethod string, requestBody io.Reader) (*http.Response, []byte, error) {
+	client := &http.Client{}
+	newRequest, err := http.NewRequest(requestMethod, requestUrl, requestBody)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	newRequest.Header.Add("Content-Type", "application/json")
+
+	serverResponse, err := client.Do(newRequest)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	responseBody, err := ioutil.ReadAll(serverResponse.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return serverResponse, responseBody, err
 }

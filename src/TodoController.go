@@ -7,15 +7,19 @@ import (
 	"net/http"
 )
 
-const TODOS_INDEX = "custom_todos"
-const HOST_URL = "http://localhost:9200"
+const TodosIndex = "custom_todos"
+const HostUrl = "http://localhost:9200"
 
 func EnrichRouter(mainRouter *mux.Router) {
 
 	todoRouter := mainRouter.PathPrefix("/todo").Subrouter()
 	todoRouter.HandleFunc("", createTodo).Methods("POST")
 	todoRouter.HandleFunc("/{id}", removeTodo).Methods("DELETE")
+	todoRouter.HandleFunc("/{id}", putTodo).Methods("PUT")
 	todoRouter.HandleFunc("/{id}", readTodo).Methods("GET")
+
+	todosRouter := mainRouter.PathPrefix("/todos").Subrouter()
+	todosRouter.HandleFunc("", searchTodos).Methods("GET")
 
 }
 
@@ -67,4 +71,20 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 	outputData, _ := json.Marshal(responseData)
 	w.WriteHeader(responseData.Code)
 	_, _ = w.Write(outputData)
+}
+
+func putTodo(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	_, ok := vars["id"]
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Fatal("Problem retrieving [id] from URL")
+		return
+	}
+
+	log.Print("Update todo log")
+}
+
+func searchTodos(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Search todo log")
 }
