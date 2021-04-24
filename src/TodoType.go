@@ -7,6 +7,7 @@ import (
 
 type CustomInterface interface {
 	MarshalItem() ([]byte, error)
+	UnmarshalItem([]byte) error
 }
 
 type Todo struct {
@@ -18,6 +19,13 @@ type Todo struct {
 func (todo Todo) MarshalItem() ([]byte, error) {
 	dataJSON, err := json.Marshal(todo)
 	return dataJSON, err
+}
+
+func (todo *Todo) UnmarshalItem(input []byte) error {
+	if err := json.Unmarshal(input, todo); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (todo *Todo) ResolveMap(inputMap map[string]interface{}) {

@@ -3,14 +3,14 @@ package src
 import (
 	"context"
 	"fmt"
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 	"log"
 	"time"
 )
 
-var ESConfiguration = InitializeElasticSearchClient()
+var ESConfiguration = initializeElasticSearchClient()
 
-func InitializeElasticSearchClient() (configuration ElasticConfiguration) {
+func initializeElasticSearchClient() (configuration ElasticConfiguration) {
 	client, err := elastic.NewClient(
 		elastic.SetSniff(false),
 		elastic.SetURL(HostUrl),
@@ -54,55 +54,65 @@ func (receiver ElasticConfiguration) createElasticIndex() {
 	}
 }
 
-func (receiver ElasticConfiguration) searchTodos(searchedID string) (interface{}, error) {
-	q := elastic.NewBoolQuery()
-	q.Must(elastic.NewIdsQuery(searchedID))
-
-	searchResult, err := receiver.ElasticClient.Search().
-		Index(TodosIndex).
-		Type("_doc").
-		Query(q).
-		TrackScores(false).
+func (receiver ElasticConfiguration) searchTodos(indexName string, searchedID string, targetClass CustomInterface) error {
+	searchResult, err := receiver.ElasticClient.
+		Get().
+		Index(indexName).
+		Id(searchedID).
 		Do(receiver.Context)
 
+	//TODO Create solution to transfer status code
+	//This might be always not found
 	if err != nil {
 		log.Printf("searchTodo error %s\n", err)
-		return "", err
+		return err
 	}
 
-	//var todos []Todo
-
-	for _, hit := range searchResult.Hits.Hits {
-		todo, err := hit.Source.MarshalJSON()
-		if err != nil {
-			fmt.Println("[Getting Students][Unmarshal] Err=", err)
-		}
-
-		fmt.Println(todo)
+	test, err := searchResult.Source.MarshalJSON()
+	if err != nil {
+		log.Printf("searchTodo error %s\n", err)
+		return err
 	}
 
-	return nil, nil
+	if err = targetClass.UnmarshalItem(test); err != nil {
+		log.Printf("searchTodo error %s\n", err)
+		return err
+	}
+
+	return nil
 }
 
-func (receiver ElasticConfiguration) addTodo(input CustomInterface, indexName string) (string, error) {
+func (receiver ElasticConfiguration) insertToIndex(itemId string, input CustomInterface, indexName string) (string, error) {
 
 	dataJSON, err := input.MarshalItem()
 	if err != nil {
-		log.Printf("addTodo error %s\n", err)
+		log.Printf("insertToIndex() error %s\n", err)
 		return "", err
 	}
 
 	contentBody := string(dataJSON)
 	replyCustom, err := receiver.ElasticClient.Index().
 		Index(indexName).
-		Type("_doc").
+		Id(itemId).
 		BodyJson(contentBody).
 		Do(receiver.Context)
 
 	if err != nil {
-		log.Printf("addTodo error %s\n", err)
+		log.Printf("insertToIndex() error %s\n", err)
 		return "", err
 	}
 
 	return replyCustom.Id, nil
+}
+
+func (receiver ElasticConfiguration) deleteItem(indexName string, searchedID string) {
+	_, err := receiver.ElasticClient.
+		Delete().
+		Index(indexName).
+		Id(searchedID).
+		Do(receiver.Context)
+
+	if err != nil {
+		log.Printf("deleteItem() error: %s", err)
+	}
 }

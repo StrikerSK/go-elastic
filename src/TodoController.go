@@ -36,7 +36,7 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	responseId, err := ESConfiguration.addTodo(todo, TodosIndex)
+	responseId, err := ESConfiguration.insertToIndex("", &todo, TodosIndex)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
@@ -60,14 +60,22 @@ func readTodo(w http.ResponseWriter, r *http.Request) {
 	todoID, ok := vars["id"]
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatal("Problem retrieving [id] from URL")
+		log.Println("Problem retrieving [id] from URL")
 		return
 	}
 
-	ESConfiguration.searchTodos(todoID)
+	var todo Todo
+	if err := ESConfiguration.searchTodos(TodosIndex, todoID, &todo); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	responseData := getTodo(todoID)
+	responseData := response.RequestResponse{
+		Data:   todo,
+		Status: "Todo found",
+		Code:   http.StatusOK,
+	}
 	outputData, _ := json.Marshal(responseData)
 	w.WriteHeader(responseData.Code)
 	_, _ = w.Write(outputData)
@@ -82,8 +90,15 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ESConfiguration.deleteItem(TodosIndex, todoID)
+
 	w.Header().Set("Content-Type", "application/json")
-	responseData := deleteTodo(todoID)
+	responseData := response.RequestResponse{
+		Data:   nil,
+		Status: "Todo deleted",
+		Code:   200,
+	}
+
 	outputData, _ := json.Marshal(responseData)
 	w.WriteHeader(responseData.Code)
 	_, _ = w.Write(outputData)
@@ -108,7 +123,18 @@ func putTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	responseData := updateTodo(todoID, todo)
+	responseId, err := ESConfiguration.insertToIndex(todoID, &todo, TodosIndex)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Print(err.Error())
+		return
+	}
+
+	responseData := response.RequestResponse{
+		Data:   responseId,
+		Status: "Todo updated",
+		Code:   http.StatusOK,
+	}
 	outputData, _ := json.Marshal(responseData)
 	w.WriteHeader(responseData.Code)
 	_, _ = w.Write(outputData)
