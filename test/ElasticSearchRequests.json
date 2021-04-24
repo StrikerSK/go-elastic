@@ -64,6 +64,84 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Delete CustomTodo Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:5000/todo/{{DOCUMENT_ID}}",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"todo",
+								"{{DOCUMENT_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update CustomTodo Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Todo\",\n    \"description\": \"I should update todo\",\n    \"done\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:5000/todo/{{DOCUMENT_ID}}",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"todo",
+								"{{DOCUMENT_ID}}"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},

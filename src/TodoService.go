@@ -88,6 +88,40 @@ func getTodo(todoID string) response.RequestResponse {
 	}
 }
 
+func updateTodo(todoID string, todoBody Todo) response.RequestResponse {
+
+	marshalledObject, _ := todoBody.MarshalItem()
+	payload := strings.NewReader(string(marshalledObject))
+
+	res, _, err := sendRequest(todoDocumentUrl+"/"+todoID, "PUT", payload)
+	if err != nil {
+		log.Printf("deleteTodo() [%s] failed: %s\n", todoID, err)
+	}
+
+	switch res.StatusCode {
+	case http.StatusOK:
+		log.Printf("Todo [%s] updated", todoID)
+		return response.RequestResponse{
+			Data:   nil,
+			Status: "Todo updated",
+			Code:   http.StatusOK,
+		}
+	case http.StatusCreated:
+		return response.RequestResponse{
+			Data:   todoID,
+			Status: "Data created",
+			Code:   http.StatusCreated,
+		}
+	default:
+		log.Printf("updateTodo() error occurred:%s\n", err)
+		return response.RequestResponse{
+			Data:   "Unexpected error occurred",
+			Status: "Error",
+			Code:   http.StatusBadRequest,
+		}
+	}
+}
+
 func deleteTodo(todoID string) response.RequestResponse {
 
 	res, _, err := sendRequest(todoDocumentUrl+"/"+todoID, "DELETE", nil)

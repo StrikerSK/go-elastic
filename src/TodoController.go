@@ -74,15 +74,28 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func putTodo(w http.ResponseWriter, r *http.Request) {
+	var todo Todo
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&todo)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Print(err.Error())
+		return
+	}
+
 	vars := mux.Vars(r)
-	_, ok := vars["id"]
+	todoID, ok := vars["id"]
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Fatal("Problem retrieving [id] from URL")
 		return
 	}
 
-	log.Print("Update todo log")
+	w.Header().Set("Content-Type", "application/json")
+	responseData := updateTodo(todoID, todo)
+	outputData, _ := json.Marshal(responseData)
+	w.WriteHeader(responseData.Code)
+	_, _ = w.Write(outputData)
 }
 
 func searchTodos(w http.ResponseWriter, r *http.Request) {
