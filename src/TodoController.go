@@ -3,6 +3,7 @@ package src
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"go-elastic/src/response"
 	"log"
 	"net/http"
 )
@@ -34,8 +35,21 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	responseData := createData(todo)
+
+	responseId, err := ESConfiguration.addTodo(todo, TodosIndex)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Print(err.Error())
+		return
+	}
+
+	responseData := response.RequestResponse{
+		Data:   responseId,
+		Status: "Todo created",
+		Code:   http.StatusCreated,
+	}
 	outputData, _ := json.Marshal(responseData)
+
 	w.WriteHeader(responseData.Code)
 	_, _ = w.Write(outputData)
 
@@ -49,6 +63,8 @@ func readTodo(w http.ResponseWriter, r *http.Request) {
 		log.Fatal("Problem retrieving [id] from URL")
 		return
 	}
+
+	ESConfiguration.searchTodos(todoID)
 
 	w.Header().Set("Content-Type", "application/json")
 	responseData := getTodo(todoID)

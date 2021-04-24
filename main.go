@@ -11,8 +11,6 @@ import (
 func main() {
 	port := os.Getenv("PORT")
 
-	src.ESConfiguration.CreateElasticIndex()
-
 	if port == "" {
 		//log.Fatal("$PORT must be set")
 		port = "5000"
