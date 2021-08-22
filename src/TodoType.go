@@ -28,40 +28,19 @@ func (todo *Todo) UnmarshalItem(input []byte) error {
 	return nil
 }
 
-func (todo *Todo) ResolveMap(inputMap map[string]interface{}) {
-	todo.Name = inputMap["name"].(string)
-	todo.Description = inputMap["description"].(string)
-	todo.Done = inputMap["done"].(bool)
-	return
-}
-
+//Mapping to every type property should be made to create index
 func CreateTodoIndexBody() []byte {
-	var propertyMap = make(map[string]property, 4)
-	propertyMap["name"] = property{
-		Type: "text",
-	}
-
-	propertyMap["description"] = property{
-		Type: "text",
-	}
-
-	propertyMap["done"] = property{
-		Type: "boolean",
-	}
-
 	elasticBody := elasticBody{
 		Settings: settings{
 			NumberOfShards:   1,
 			NumberOfReplicas: 1,
 		},
-		Mappings: mappings{
-			Properties: propertyMap,
-		},
+		Mappings: *CreateMapping(Todo{}),
 	}
 
 	payload, err := json.Marshal(elasticBody)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Todo index initialization error: %v\n", err)
 	}
 
 	return payload
