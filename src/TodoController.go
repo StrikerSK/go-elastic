@@ -9,18 +9,17 @@ import (
 )
 
 const TodosIndex = "custom_todos"
-const HostUrl = "http://localhost:9200"
 
 func EnrichRouter(mainRouter *mux.Router) {
 
 	todoRouter := mainRouter.PathPrefix("/todo").Subrouter()
-	todoRouter.HandleFunc("", createTodo).Methods("POST")
-	todoRouter.HandleFunc("/{id}", removeTodo).Methods("DELETE")
-	todoRouter.HandleFunc("/{id}", putTodo).Methods("PUT")
-	todoRouter.HandleFunc("/{id}", readTodo).Methods("GET")
+	todoRouter.HandleFunc("", createTodo).Methods(http.MethodPost)
+	todoRouter.HandleFunc("/{id}", removeTodo).Methods(http.MethodDelete)
+	todoRouter.HandleFunc("/{id}", putTodo).Methods(http.MethodPut)
+	todoRouter.HandleFunc("/{id}", readTodo).Methods(http.MethodGet)
 
 	todosRouter := mainRouter.PathPrefix("/todos").Subrouter()
-	todosRouter.HandleFunc("", searchTodos).Methods("GET")
+	todosRouter.HandleFunc("", searchTodos).Methods(http.MethodGet)
 
 }
 
@@ -36,7 +35,7 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	responseId, err := ESConfiguration.insertToIndex("", &todo, TodosIndex)
+	responseId, err := GetElasticInstance().insertToIndex("", &todo, TodosIndex)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
@@ -65,7 +64,7 @@ func readTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var todo Todo
-	if err := ESConfiguration.searchTodos(TodosIndex, todoID, &todo); err != nil {
+	if err := GetElasticInstance().searchTodos(TodosIndex, todoID, &todo); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -90,7 +89,7 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ESConfiguration.deleteItem(TodosIndex, todoID)
+	GetElasticInstance().deleteItem(TodosIndex, todoID)
 
 	w.Header().Set("Content-Type", "application/json")
 	responseData := response.RequestResponse{
@@ -123,7 +122,7 @@ func putTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	responseId, err := ESConfiguration.insertToIndex(todoID, &todo, TodosIndex)
+	responseId, err := GetElasticInstance().insertToIndex(todoID, &todo, TodosIndex)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
