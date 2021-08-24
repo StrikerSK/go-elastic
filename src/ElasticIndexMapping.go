@@ -55,6 +55,7 @@ func CreateMapping(s interface{}) *mappings {
 	return mappingMap
 }
 
+//Generating of ElasticSearches' simple index model to send
 func CreateMappingMap(userStruct interface{}) *mappings {
 	v := reflect.ValueOf(userStruct)
 	typeOfS := v.Type()
@@ -63,16 +64,18 @@ func CreateMappingMap(userStruct interface{}) *mappings {
 	for i := 0; i < v.NumField(); i++ {
 		fieldName := strings.ToLower(typeOfS.Field(i).Name)
 		fieldType, _ := resolveType(v.Field(i).Type().Kind().String())
+		resolvedProperty := NewProperty(fieldType, nil)
+
 		//fmt.Printf("Name: %s, Kind: %v\n", fieldName, v.Field(i).Kind().String())
+		//In case of 'struct' type, we need to call recursion to resolve nested structure
 		if v.Field(i).Type().Kind().String() == "struct" {
 			nestedMapping := CreateMappingMap(v.Field(i).Interface())
-			resolvedProperty := NewProperty(fieldType, nestedMapping.Properties)
+			resolvedProperty.Properties = nestedMapping.Properties
 			outputMapping.addType(fieldName, v.Field(i).Kind().String())
 			outputMapping.Properties[fieldName] = *resolvedProperty
-		} else {
-			resolvedProperty := NewProperty(fieldType, nil)
-			outputMapping.Properties[fieldName] = *resolvedProperty
 		}
+
+		outputMapping.Properties[fieldName] = *resolvedProperty
 	}
 	return outputMapping
 }
