@@ -3,6 +3,7 @@ package src
 import (
 	"errors"
 	"reflect"
+	"strings"
 )
 
 type elasticBody struct {
@@ -25,7 +26,15 @@ func (m *mappings) addType(key, value string) {
 }
 
 type property struct {
-	Type string `json:"type"`
+	Type       string              `json:"type"`
+	Properties map[string]property `json:"properties,omitempty"`
+}
+
+func NewProperty(propType string, mappingsMap map[string]property) *property {
+	return &property{
+		Type:       propType,
+		Properties: mappingsMap,
+	}
 }
 
 type settings struct {
@@ -44,6 +53,28 @@ func CreateMapping(s interface{}) *mappings {
 	}
 
 	return mappingMap
+}
+
+func CreateMappingMap(userStruct interface{}) *mappings {
+	v := reflect.ValueOf(userStruct)
+	typeOfS := v.Type()
+
+	outputMapping := NewMappings(v.NumField())
+	for i := 0; i < v.NumField(); i++ {
+		fieldName := strings.ToLower(typeOfS.Field(i).Name)
+		fieldType, _ := resolveType(v.Field(i).Type().Kind().String())
+		//fmt.Printf("Name: %s, Kind: %v\n", fieldName, v.Field(i).Kind().String())
+		if v.Field(i).Type().Kind().String() == "struct" {
+			nestedMapping := CreateMappingMap(v.Field(i).Interface())
+			resolvedProperty := NewProperty(fieldType, nestedMapping.Properties)
+			outputMapping.addType(fieldName, v.Field(i).Kind().String())
+			outputMapping.Properties[fieldName] = *resolvedProperty
+		} else {
+			resolvedProperty := NewProperty(fieldType, nil)
+			outputMapping.Properties[fieldName] = *resolvedProperty
+		}
+	}
+	return outputMapping
 }
 
 func resolveType(input string) (output string, err error) {
