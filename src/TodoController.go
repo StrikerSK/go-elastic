@@ -3,6 +3,7 @@ package src
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"go-elastic/src/elastic"
 	"go-elastic/src/response"
 	"log"
 	"net/http"
@@ -33,7 +34,7 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	responseId, err := GetElasticInstance().insertToIndex("", &todo, TodosIndex)
+	responseId, err := elastic.GetElasticInstance().InsertDocument("", TodosIndex, &todo)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
@@ -53,8 +54,7 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func readTodo(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	todoID, ok := vars["id"]
+	todoID, ok := mux.Vars(r)["id"]
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println("Problem retrieving [id] from URL")
@@ -62,7 +62,7 @@ func readTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var todo Todo
-	if err := GetElasticInstance().searchTodos(TodosIndex, todoID, &todo); err != nil {
+	if err := elastic.GetElasticInstance().SearchDocument(TodosIndex, todoID, &todo); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -87,7 +87,7 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	GetElasticInstance().deleteItem(TodosIndex, todoID)
+	elastic.GetElasticInstance().DeleteDocument(TodosIndex, todoID)
 
 	w.Header().Set("Content-Type", "application/json")
 	responseData := response.RequestResponse{
@@ -103,16 +103,14 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 
 func putTodo(w http.ResponseWriter, r *http.Request) {
 	var todo Todo
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&todo)
-	if err != nil {
+
+	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
 		return
 	}
 
-	vars := mux.Vars(r)
-	todoID, ok := vars["id"]
+	todoID, ok := mux.Vars(r)["id"]
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Fatal("Problem retrieving [id] from URL")
@@ -120,7 +118,7 @@ func putTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	responseId, err := GetElasticInstance().insertToIndex(todoID, &todo, TodosIndex)
+	responseId, err := elastic.GetElasticInstance().InsertDocument(todoID, TodosIndex, &todo)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())

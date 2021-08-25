@@ -1,4 +1,4 @@
-package src
+package elastic
 
 import (
 	"errors"
@@ -6,41 +6,55 @@ import (
 	"strings"
 )
 
-type elasticBody struct {
-	Settings settings          `json:"settings"`
-	Mappings structureMappings `json:"mappings"`
+type ElasticBody struct {
+	Settings ElasticSettings `json:"settings"`
+	Mappings ElasticMappings `json:"mappings"`
+}
+
+func NewElasticBody(settings ElasticSettings, sm ElasticMappings) ElasticBody {
+	return ElasticBody{
+		Settings: settings,
+		Mappings: sm,
+	}
 }
 
 //Structure mapping all structure field name and type
-type structureMappings struct {
-	Type       string                       `json:"type,omitempty"`
-	Properties map[string]structureMappings `json:"properties,omitempty"`
+type ElasticMappings struct {
+	Type       string                     `json:"type,omitempty"`
+	Properties map[string]ElasticMappings `json:"properties,omitempty"`
 }
 
-//Constructor to create new structureMappings
-func NewMappings(propType string, propertiesMapping map[string]structureMappings) *structureMappings {
-	return &structureMappings{
+//Constructor to create new ElasticMappings
+func NewMappings(propType string, propertiesMapping map[string]ElasticMappings) *ElasticMappings {
+	return &ElasticMappings{
 		Type:       propType,
 		Properties: propertiesMapping,
 	}
 }
 
-func (m *structureMappings) addType(key, value string) {
-	m.Properties[key] = structureMappings{Type: value}
+func (m *ElasticMappings) addType(key, value string) {
+	m.Properties[key] = ElasticMappings{Type: value}
 	return
 }
 
-type settings struct {
+type ElasticSettings struct {
 	NumberOfShards   int `json:"number_of_shards"`
 	NumberOfReplicas int `json:"number_of_replicas"`
 }
 
+func NewDefaultSettings() ElasticSettings {
+	return ElasticSettings{
+		NumberOfShards:   1,
+		NumberOfReplicas: 1,
+	}
+}
+
 //Generating of ElasticSearches' simple index model to create
-func CreateMappingMap(userStruct interface{}) *structureMappings {
+func CreateMappingMap(userStruct interface{}) *ElasticMappings {
 	v := reflect.ValueOf(userStruct)
 	typeOfS := v.Type()
 
-	outputMapping := NewMappings("", make(map[string]structureMappings, v.NumField()))
+	outputMapping := NewMappings("", make(map[string]ElasticMappings, v.NumField()))
 	for i := 0; i < v.NumField(); i++ {
 		fieldName := strings.ToLower(typeOfS.Field(i).Name)
 		fieldType, _ := resolveType(v.Field(i).Type().Kind().String())

@@ -2,13 +2,9 @@ package src
 
 import (
 	"encoding/json"
+	"go-elastic/src/elastic"
 	"log"
 )
-
-type CustomInterface interface {
-	MarshalItem() ([]byte, error)
-	UnmarshalItem([]byte) error
-}
 
 type Todo struct {
 	Name        string `json:"name"`
@@ -16,13 +12,13 @@ type Todo struct {
 	Done        bool   `json:"done"`
 }
 
-func (todo Todo) MarshalItem() ([]byte, error) {
-	dataJSON, err := json.Marshal(todo)
-	return dataJSON, err
+func (todo *Todo) MarshalItem() ([]byte, error) {
+	bs, err := json.Marshal(todo)
+	return bs, err
 }
 
-func (todo *Todo) UnmarshalItem(input []byte) error {
-	if err := json.Unmarshal(input, todo); err != nil {
+func (todo *Todo) UnmarshalItem(bs []byte) error {
+	if err := json.Unmarshal(bs, todo); err != nil {
 		return err
 	}
 	return nil
@@ -30,13 +26,7 @@ func (todo *Todo) UnmarshalItem(input []byte) error {
 
 //Mapping to every type property should be made to create index
 func CreateTodoIndexBody() []byte {
-	elasticBody := elasticBody{
-		Settings: settings{
-			NumberOfShards:   1,
-			NumberOfReplicas: 1,
-		},
-		Mappings: *CreateMappingMap(Todo{}),
-	}
+	elasticBody := elastic.NewElasticBody(elastic.NewDefaultSettings(), *elastic.CreateMappingMap(Todo{}))
 
 	payload, err := json.Marshal(elasticBody)
 	if err != nil {

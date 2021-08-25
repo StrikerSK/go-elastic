@@ -3,13 +3,14 @@ package main
 import (
 	"github.com/gorilla/mux"
 	"go-elastic/src"
+	"go-elastic/src/elastic"
 	"log"
 	"net/http"
 	"os"
 )
 
 func init() {
-	src.GetElasticInstance().CreateIndex(src.TodosIndex, src.CreateTodoIndexBody())
+	elastic.GetElasticInstance().InitializeIndex(src.TodosIndex, src.CreateTodoIndexBody())
 }
 
 func main() {
