@@ -35,7 +35,7 @@ func CreateTodoIndexBody() []byte {
 			NumberOfShards:   1,
 			NumberOfReplicas: 1,
 		},
-		Mappings: *CreateMapping(Todo{}),
+		Mappings: *CreateMappingMap(Todo{}),
 	}
 
 	payload, err := json.Marshal(elasticBody)

@@ -7,34 +7,27 @@ import (
 )
 
 type elasticBody struct {
-	Settings settings `json:"settings"`
-	Mappings mappings `json:"mappings"`
+	Settings settings          `json:"settings"`
+	Mappings structureMappings `json:"mappings"`
 }
 
-type mappings struct {
-	Properties map[string]property `json:"properties"`
+//Structure mapping all structure field name and type
+type structureMappings struct {
+	Type       string                       `json:"type,omitempty"`
+	Properties map[string]structureMappings `json:"properties,omitempty"`
 }
 
-func NewMappings(initSize int) *mappings {
-	initializedMap := make(map[string]property, initSize)
-	return &mappings{Properties: initializedMap}
-}
-
-func (m *mappings) addType(key, value string) {
-	m.Properties[key] = property{Type: value}
-	return
-}
-
-type property struct {
-	Type       string              `json:"type"`
-	Properties map[string]property `json:"properties,omitempty"`
-}
-
-func NewProperty(propType string, mappingsMap map[string]property) *property {
-	return &property{
+//Constructor to create new structureMappings
+func NewMappings(propType string, propertiesMapping map[string]structureMappings) *structureMappings {
+	return &structureMappings{
 		Type:       propType,
-		Properties: mappingsMap,
+		Properties: propertiesMapping,
 	}
+}
+
+func (m *structureMappings) addType(key, value string) {
+	m.Properties[key] = structureMappings{Type: value}
+	return
 }
 
 type settings struct {
@@ -42,29 +35,16 @@ type settings struct {
 	NumberOfReplicas int `json:"number_of_replicas"`
 }
 
-func CreateMapping(s interface{}) *mappings {
-	v := reflect.ValueOf(s)
-	typeOfS := v.Type()
-
-	mappingMap := NewMappings(v.NumField())
-	for i := 0; i < v.NumField(); i++ {
-		resolvedType, _ := resolveType(v.Field(i).Type().Kind().String())
-		mappingMap.addType(typeOfS.Field(i).Name, resolvedType)
-	}
-
-	return mappingMap
-}
-
-//Generating of ElasticSearches' simple index model to send
-func CreateMappingMap(userStruct interface{}) *mappings {
+//Generating of ElasticSearches' simple index model to create
+func CreateMappingMap(userStruct interface{}) *structureMappings {
 	v := reflect.ValueOf(userStruct)
 	typeOfS := v.Type()
 
-	outputMapping := NewMappings(v.NumField())
+	outputMapping := NewMappings("", make(map[string]structureMappings, v.NumField()))
 	for i := 0; i < v.NumField(); i++ {
 		fieldName := strings.ToLower(typeOfS.Field(i).Name)
 		fieldType, _ := resolveType(v.Field(i).Type().Kind().String())
-		resolvedProperty := NewProperty(fieldType, nil)
+		resolvedProperty := NewMappings(fieldType, nil)
 
 		//fmt.Printf("Name: %s, Kind: %v\n", fieldName, v.Field(i).Kind().String())
 		//In case of 'struct' type, we need to call recursion to resolve nested structure
