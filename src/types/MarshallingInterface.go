@@ -4,4 +4,5 @@ package types
 type MarshallingInterface interface {
 	MarshalItem() ([]byte, error)
 	UnmarshalItem([]byte) error
+	GetIndexName() string
 }

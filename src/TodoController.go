@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-const TodosIndex = "custom_todos"
+const TodosIndex = "todos"
 
 func EnrichRouter(router *mux.Router) {
 	subRouter := router.PathPrefix("/todo").Subrouter()
@@ -34,22 +34,15 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	responseId, err := elastic.GetElasticInstance().InsertDocument("", TodosIndex, &todo)
+	responseId, err := elastic.GetElasticInstance().InsertDocument("", &todo)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
 		return
 	}
 
-	responseData := response.RequestResponse{
-		Data:   map[string]string{"id": responseId},
-		Status: "Todo created",
-		Code:   http.StatusCreated,
-	}
-	outputData, _ := json.Marshal(responseData)
-
-	w.WriteHeader(responseData.Code)
-	_, _ = w.Write(outputData)
+	responseData := response.NewRequestResponse(http.StatusCreated, map[string]string{"id": responseId, "status": "todo created"})
+	response.WriteResponse(responseData, w)
 
 }
 
@@ -62,20 +55,13 @@ func readTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var todo Todo
-	if err := elastic.GetElasticInstance().SearchDocument(TodosIndex, todoID, &todo); err != nil {
+	if err := elastic.GetElasticInstance().SearchDocument(todoID, &todo); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	responseData := response.RequestResponse{
-		Data:   todo,
-		Status: "Todo found",
-		Code:   http.StatusOK,
-	}
-	outputData, _ := json.Marshal(responseData)
-	w.WriteHeader(responseData.Code)
-	_, _ = w.Write(outputData)
+	responseData := response.NewRequestResponse(http.StatusOK, todo)
+	response.WriteResponse(responseData, w)
 }
 
 func removeTodo(w http.ResponseWriter, r *http.Request) {
@@ -87,18 +73,9 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	elastic.GetElasticInstance().DeleteDocument(TodosIndex, todoID)
-
-	w.Header().Set("Content-Type", "application/json")
-	responseData := response.RequestResponse{
-		Data:   nil,
-		Status: "Todo deleted",
-		Code:   http.StatusOK,
-	}
-
-	outputData, _ := json.Marshal(responseData)
-	w.WriteHeader(responseData.Code)
-	_, _ = w.Write(outputData)
+	elastic.GetElasticInstance().DeleteDocument(todoID, TodosIndex)
+	responseData := response.NewRequestResponse(http.StatusOK, nil)
+	response.WriteResponse(responseData, w)
 }
 
 func putTodo(w http.ResponseWriter, r *http.Request) {
@@ -118,21 +95,22 @@ func putTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	responseId, err := elastic.GetElasticInstance().InsertDocument(todoID, TodosIndex, &todo)
+	responseId, err := elastic.GetElasticInstance().InsertDocument(todoID, &todo)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
 		return
 	}
 
-	responseData := response.RequestResponse{
-		Data:   responseId,
-		Status: "Todo updated",
-		Code:   http.StatusOK,
-	}
-	outputData, _ := json.Marshal(responseData)
-	w.WriteHeader(responseData.Code)
-	_, _ = w.Write(outputData)
+	responseData := response.NewRequestResponse(
+		http.StatusOK,
+		map[string]string{
+			"id":     responseId,
+			"status": "todo updated",
+		},
+	)
+
+	response.WriteResponse(responseData, w)
 }
 
 func searchTodos(w http.ResponseWriter, r *http.Request) {

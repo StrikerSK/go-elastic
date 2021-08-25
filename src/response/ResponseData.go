@@ -1,19 +1,31 @@
 package response
 
 type RequestResponse struct {
-	Data   interface{} `json:"data"`
-	Status string      `json:"status"`
-	Code   int         `json:"code"`
+	Data       interface{}
+	StatusCode int
+	Headers    map[string]string
 }
 
-func NewRequestResponse(status string, statusCode int, inputData interface{}) *RequestResponse {
+func NewRequestResponse(statusCode int, inputData interface{}) *RequestResponse {
 	return &RequestResponse{
-		Data:   inputData,
-		Status: status,
-		Code:   statusCode,
+		Data:       inputData,
+		StatusCode: statusCode,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
 	}
 }
 
-func (receiver RequestResponse) GetData() interface{} {
-	return receiver.Data
+func (rr RequestResponse) GetData() interface{} {
+	return map[string]interface{}{
+		"data": rr.Data,
+	}
+}
+
+func (rr RequestResponse) GetStatusCode() int {
+	return rr.StatusCode
+}
+
+func (rr RequestResponse) GetHeaders() map[string]string {
+	return rr.Headers
 }

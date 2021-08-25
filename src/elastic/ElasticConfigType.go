@@ -61,7 +61,8 @@ func (ec ElasticConfiguration) deleteIndex(indexName string) error {
 	return nil
 }
 
-func (ec ElasticConfiguration) SearchDocument(indexName, documentID string, targetClass types.MarshallingInterface) error {
+func (ec ElasticConfiguration) SearchDocument(documentID string, targetClass types.MarshallingInterface) error {
+	indexName := targetClass.GetIndexName()
 	searchResult, err := ec.ElasticClient.
 		Get().
 		Index(indexName).
@@ -71,25 +72,27 @@ func (ec ElasticConfiguration) SearchDocument(indexName, documentID string, targ
 	//TODO Create solution to transfer status code
 	//This might be always not found
 	if err != nil {
-		log.Printf("Search Index Error: %v\n", err)
+		log.Printf("Search Index [%s/%s] Error: %v\n", indexName, documentID, err)
 		return err
 	}
 
 	resolvedStructure, err := searchResult.Source.MarshalJSON()
 	if err != nil {
-		log.Printf("Search Index Error: %v\n", err)
+		log.Printf("Search Index [%s/%s] Error: %v\n", indexName, documentID, err)
 		return err
 	}
 
 	if err = targetClass.UnmarshalItem(resolvedStructure); err != nil {
-		log.Printf("Search Index Error %v\n", err)
+		log.Printf("Search Index [%s/%s] Error: %v\n", indexName, documentID, err)
 		return err
 	}
 
+	log.Printf("Search Index [%s/%s]: success\n", indexName, documentID)
 	return nil
 }
 
-func (ec ElasticConfiguration) InsertDocument(documentID, indexName string, input types.MarshallingInterface) (string, error) {
+func (ec ElasticConfiguration) InsertDocument(documentID string, input types.MarshallingInterface) (string, error) {
+	indexName := input.GetIndexName()
 
 	dataJSON, err := input.MarshalItem()
 	if err != nil {
@@ -113,7 +116,7 @@ func (ec ElasticConfiguration) InsertDocument(documentID, indexName string, inpu
 	return replyCustom.Id, nil
 }
 
-func (ec ElasticConfiguration) DeleteDocument(indexName string, documentID string) {
+func (ec ElasticConfiguration) DeleteDocument(documentID, indexName string) {
 	_, err := ec.ElasticClient.
 		Delete().
 		Index(indexName).
@@ -121,7 +124,7 @@ func (ec ElasticConfiguration) DeleteDocument(indexName string, documentID strin
 		Do(ec.Context)
 
 	if err != nil {
-		log.Printf("Index Document [%s] Delete: %v", documentID, err)
+		log.Printf("Index Document [%s/%s] Delete: %v", indexName, documentID, err)
 		return
 	}
 }

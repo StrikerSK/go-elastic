@@ -24,6 +24,10 @@ func (todo *Todo) UnmarshalItem(bs []byte) error {
 	return nil
 }
 
+func (todo Todo) GetIndexName() string {
+	return TodosIndex
+}
+
 //Mapping to every type property should be made to create index
 func CreateTodoIndexBody() []byte {
 	elasticBody := elastic.NewElasticBody(elastic.NewDefaultSettings(), *elastic.CreateMappingMap(Todo{}))
