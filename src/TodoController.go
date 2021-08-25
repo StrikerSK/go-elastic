@@ -10,17 +10,15 @@ import (
 
 const TodosIndex = "custom_todos"
 
-func EnrichRouter(mainRouter *mux.Router) {
+func EnrichRouter(router *mux.Router) {
+	subRouter := router.PathPrefix("/todo").Subrouter()
+	subRouter.HandleFunc("", createTodo).Methods(http.MethodPost)
+	subRouter.HandleFunc("/{id}", removeTodo).Methods(http.MethodDelete)
+	subRouter.HandleFunc("/{id}", putTodo).Methods(http.MethodPut)
+	subRouter.HandleFunc("/{id}", readTodo).Methods(http.MethodGet)
 
-	todoRouter := mainRouter.PathPrefix("/todo").Subrouter()
-	todoRouter.HandleFunc("", createTodo).Methods(http.MethodPost)
-	todoRouter.HandleFunc("/{id}", removeTodo).Methods(http.MethodDelete)
-	todoRouter.HandleFunc("/{id}", putTodo).Methods(http.MethodPut)
-	todoRouter.HandleFunc("/{id}", readTodo).Methods(http.MethodGet)
-
-	todosRouter := mainRouter.PathPrefix("/todos").Subrouter()
+	todosRouter := router.PathPrefix("/todos").Subrouter()
 	todosRouter.HandleFunc("", searchTodos).Methods(http.MethodGet)
-
 }
 
 func createTodo(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +41,7 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseData := response.RequestResponse{
-		Data:   responseId,
+		Data:   map[string]string{"id": responseId},
 		Status: "Todo created",
 		Code:   http.StatusCreated,
 	}
@@ -95,7 +93,7 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 	responseData := response.RequestResponse{
 		Data:   nil,
 		Status: "Todo deleted",
-		Code:   200,
+		Code:   http.StatusOK,
 	}
 
 	outputData, _ := json.Marshal(responseData)
