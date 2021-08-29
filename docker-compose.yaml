@@ -1,0 +1,32 @@
+version: '3.5'
+
+services:
+  fullstack-app:
+    container_name: go-fullstack-server
+    #Runs Dockerfile to build the application
+    build: .
+    ports:
+      - "6000:5000"
+    restart: on-failure
+    #Dependencies name base on other services in compose file
+    depends_on:
+      - fullstack-elastic
+    networks:
+      - fullstack
+    environment:
+      - ELASTIC_URL=http://fullstack-elastic:9200
+  fullstack-elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    container_name: go-app-elastic
+    environment:
+      - discovery.type=single-node
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    networks:
+      - fullstack
+
+# Networks to be created to facilitate communication between containers
+networks:
+  fullstack:
+    driver: bridge
