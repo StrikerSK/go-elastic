@@ -2,6 +2,7 @@ package response
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -17,6 +18,11 @@ func WriteResponse(res IResponse, w http.ResponseWriter) {
 	}
 
 	w.WriteHeader(res.GetStatusCode())
-	bs, _ := json.Marshal(res.GetData())
+	bs, err := json.Marshal(res.GetData())
+	if err != nil {
+		log.Printf("Writing response: %v\n", err)
+		return
+	}
+
 	_, _ = w.Write(bs)
 }

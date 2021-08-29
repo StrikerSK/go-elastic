@@ -1,4 +1,4 @@
-package src
+package todo
 
 import (
 	"encoding/json"
@@ -24,26 +24,21 @@ func EnrichRouter(router *mux.Router) {
 
 func createTodo(w http.ResponseWriter, r *http.Request) {
 	var todo Todo
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&todo)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Print(err.Error())
+	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
+		res := response.NewRequestResponse(http.StatusInternalServerError, err)
+		response.WriteResponse(res, w)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 
 	responseId, err := elastic.GetElasticInstance().InsertDocument("", &todo)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Print(err.Error())
+		res := response.NewRequestResponse(http.StatusInternalServerError, err)
+		response.WriteResponse(res, w)
 		return
 	}
 
-	responseData := response.NewRequestResponse(http.StatusCreated, map[string]string{"id": responseId, "status": "todo created"})
-	response.WriteResponse(responseData, w)
-
+	res := response.NewRequestResponse(http.StatusCreated, map[string]string{"id": responseId, "status": "todo created"})
+	response.WriteResponse(res, w)
 }
 
 func readTodo(w http.ResponseWriter, r *http.Request) {
@@ -60,8 +55,8 @@ func readTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseData := response.NewRequestResponse(http.StatusOK, todo)
-	response.WriteResponse(responseData, w)
+	res := response.NewRequestResponse(http.StatusOK, todo)
+	response.WriteResponse(res, w)
 }
 
 func removeTodo(w http.ResponseWriter, r *http.Request) {
@@ -74,8 +69,8 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	elastic.GetElasticInstance().DeleteDocument(todoID, TodosIndex)
-	responseData := response.NewRequestResponse(http.StatusOK, nil)
-	response.WriteResponse(responseData, w)
+	res := response.NewRequestResponse(http.StatusOK, nil)
+	response.WriteResponse(res, w)
 }
 
 func putTodo(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +97,7 @@ func putTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseData := response.NewRequestResponse(
+	res := response.NewRequestResponse(
 		http.StatusOK,
 		map[string]string{
 			"id":     responseId,
@@ -110,7 +105,7 @@ func putTodo(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	response.WriteResponse(responseData, w)
+	response.WriteResponse(res, w)
 }
 
 func searchTodos(w http.ResponseWriter, r *http.Request) {

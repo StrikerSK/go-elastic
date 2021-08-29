@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"go-elastic/src"
+	"go-elastic/src/api/exampleType"
+	"go-elastic/src/api/todo"
 	"go-elastic/src/elastic"
 	"log"
 	"net/http"
@@ -10,13 +11,13 @@ import (
 )
 
 func init() {
-	elastic.GetElasticInstance().InitializeIndex(src.TodosIndex, src.CreateTodoIndexBody())
+	elastic.GetElasticInstance().InitializeIndex(todo.TodosIndex, todo.CreateTodoIndexBody())
 }
 
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
-	src.EnrichRouter(router)
-	src.EnrichRouterWithExamples(router)
+	todo.EnrichRouter(router)
+	exampleType.EnrichRouterWithExamples(router)
 
 	log.Println("Listening")
 	log.Println(http.ListenAndServe(":"+resolvePort(), router))
@@ -24,8 +25,8 @@ func main() {
 
 func createServer() *http.Server {
 	router := mux.NewRouter().StrictSlash(true)
-	src.EnrichRouter(router)
-	src.EnrichRouterWithExamples(router)
+	todo.EnrichRouter(router)
+	exampleType.EnrichRouterWithExamples(router)
 
 	return &http.Server{
 		Addr:    resolvePort(),

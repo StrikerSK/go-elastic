@@ -17,8 +17,19 @@ func NewRequestResponse(statusCode int, inputData interface{}) *RequestResponse 
 }
 
 func (rr RequestResponse) GetData() interface{} {
-	return map[string]interface{}{
-		"data": rr.Data,
+	if rr.Data == nil {
+		return nil
+	} else {
+		dataMap := make(map[string]interface{}, 1)
+
+		switch rr.Data.(type) {
+		case error:
+			dataMap["error"] = rr.Data.(error)
+		default:
+			dataMap["data"] = rr.Data
+		}
+
+		return dataMap
 	}
 }
 
