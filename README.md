@@ -8,7 +8,6 @@ Application created to work with ElasticSearch engine
 * [How to implement Elasticsearch in Go](https://www.freecodecamp.org/news/go-elasticsearch/)
 
 ### Prerequisites
-* ElasticSearch server running on `localhost:9200`
 ```
 # Download docker image
 docker pull docker.elastic.co/elasticsearch/elasticsearch:7.12.0
@@ -18,7 +17,12 @@ docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elas
 ```
 
 ### How to run in CMD
-1. Prepare prerequisite
-2. go build go-elastic
-3. go run go-elastic
-4. Use postman collections as template
+1. Prepare requirements from prerequisites
+2. Set `ELASTIC_URL` environment variable to ElasticSearch server
+3. Run `go build go-elastic` then `go run go-elastic`
+
+### Docker Compose
+Using command `docker-compose up` from project root should build Docker image and run it with predefined services in file
+
+### Testing
+Use Postman collection in `./test/ElasticSearchRequests.json` as template requests

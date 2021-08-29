@@ -6,391 +6,518 @@
 	},
 	"item": [
 		{
-			"name": "Custom requests",
+			"name": "Todo Requests",
 			"item": [
 				{
-					"name": "Create CustomTodo Data",
-					"event": [
+					"name": "Api",
+					"item": [
 						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.environment.set(\"DOCUMENT_ID\", pm.response.json().data);"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+							"name": "CREATE Todo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const id = pm.response.json().data.id;",
+											"pm.collectionVariables.set(\"DOCUMENT_ID\", id);"
+										],
+										"type": "text/javascript"
+									}
 								}
-							}
-						},
-						"url": {
-							"raw": "localhost:5000/todo",
-							"host": [
-								"localhost"
 							],
-							"port": "5000",
-							"path": [
-								"todo"
-							]
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n\t\"person\": {\n\t\t\"firstName\": \"Karel\",\n\t\t\"lastName\": \"Tester\"\n\t},\n    \"done\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HOST_URL}}/todo",
+									"host": [
+										"{{HOST_URL}}"
+									],
+									"path": [
+										"todo"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "READ Todo",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HOST_URL}}/todo/{{DOCUMENT_ID}}",
+									"host": [
+										"{{HOST_URL}}"
+									],
+									"path": [
+										"todo",
+										"{{DOCUMENT_ID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UPDATE Todo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Updated Todo\",\n    \"description\": \"I should update todo\",\n    \"done\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HOST_URL}}/todo/{{DOCUMENT_ID}}",
+									"host": [
+										"{{HOST_URL}}"
+									],
+									"path": [
+										"todo",
+										"{{DOCUMENT_ID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE Todo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HOST_URL}}/todo/{{DOCUMENT_ID}}",
+									"host": [
+										"{{HOST_URL}}"
+									],
+									"path": [
+										"todo",
+										"{{DOCUMENT_ID}}"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Get CustomTodo Data",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "localhost:5000/todo/{{DOCUMENT_ID}}",
-							"host": [
-								"localhost"
-							],
-							"port": "5000",
-							"path": [
-								"todo",
-								"{{DOCUMENT_ID}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete CustomTodo Data",
-					"event": [
+					"name": "Elastic",
+					"item": [
 						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+							"name": "CREATE Todo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.collectionVariables.set(\"DOCUMENT_ID\", pm.response.json()[\"_id\"]);"
+										],
+										"type": "text/javascript"
+									}
 								}
-							}
-						},
-						"url": {
-							"raw": "localhost:5000/todo/{{DOCUMENT_ID}}",
-							"host": [
-								"localhost"
 							],
-							"port": "5000",
-							"path": [
-								"todo",
-								"{{DOCUMENT_ID}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update CustomTodo Data",
-					"event": [
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ELASTIC_URL}}/todos/_doc",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"todos",
+										"_doc"
+									]
+								}
+							},
+							"response": []
+						},
 						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Updated Todo\",\n    \"description\": \"I should update todo\",\n    \"done\": false\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+							"name": "READ Todo",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ELASTIC_URL}}/todos/_doc/{{DOCUMENT_ID}}",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"todos",
+										"_doc",
+										"{{DOCUMENT_ID}}"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "localhost:5000/todo/{{DOCUMENT_ID}}",
-							"host": [
-								"localhost"
-							],
-							"port": "5000",
-							"path": [
-								"todo",
-								"{{DOCUMENT_ID}}"
-							]
+						{
+							"name": "DELETE Todo",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{ELASTIC_URL}}/todos/_doc/{{DOCUMENT_ID}}",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"todos",
+										"_doc",
+										"{{DOCUMENT_ID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "READ Todos",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"query\": {\n        \"match\": {\n            \"name\": \"todo\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ELASTIC_URL}}/todos/_search",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"todos",
+										"_search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "CREATE Todo Index",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"settings\": {\n        \"number_of_shards\": 1,\n        \"number_of_replicas\": 1\n    },\n    \"mappings\": {\n        \"properties\": {\n            \"description\": {\n                \"type\": \"text\"\n            },\n            \"done\": {\n                \"type\": \"boolean\"\n            },\n            \"name\": {\n                \"type\": \"text\"\n            }\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ELASTIC_URL}}/todos",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"todos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "READ Todo Index",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ELASTIC_URL}}/todos",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"todos"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				}
 			]
 		},
 		{
-			"name": "Elastic Requests",
+			"name": "Student Requests",
 			"item": [
 				{
-					"name": "Check Elastic Server",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "localhost:9200",
-							"host": [
-								"localhost"
-							],
-							"port": "9200"
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create data",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n\t\"name\":\"Alice\",\n\t\"age\":17,\n\t\"average_score\":81.1\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:9200/students/_doc",
-							"host": [
-								"localhost"
-							],
-							"port": "9200",
-							"path": [
-								"students",
-								"_doc"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Studens Index",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "localhost:9200/students",
-							"host": [
-								"localhost"
-							],
-							"port": "9200",
-							"path": [
-								"students"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create CustomTodo Index",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"settings\": {\n        \"number_of_shards\": 1,\n        \"number_of_replicas\": 1\n    },\n    \"mappings\": {\n        \"properties\": {\n            \"description\": {\n                \"type\": \"text\"\n            },\n            \"done\": {\n                \"type\": \"boolean\"\n            },\n            \"name\": {\n                \"type\": \"text\"\n            }\n        }\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:9200/custom_todos",
-							"host": [
-								"localhost"
-							],
-							"port": "9200",
-							"path": [
-								"custom_todos"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get CustomTodo Index",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "localhost:9200/custom_todos",
-							"host": [
-								"localhost"
-							],
-							"port": "9200",
-							"path": [
-								"custom_todos"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create CustomTodo Data",
-					"event": [
+					"name": "Index",
+					"item": [
 						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.environment.set(\"DOCUMENT_ID\", pm.response.json()[\"_id\"]);"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+							"name": "READ Students Index",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ELASTIC_URL}}/students",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"students"
+									]
 								}
-							}
-						},
-						"url": {
-							"raw": "localhost:9200/custom_todos/_doc",
-							"host": [
-								"localhost"
-							],
-							"port": "9200",
-							"path": [
-								"custom_todos",
-								"_doc"
-							]
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Update CustomTodo Data",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Create Updated Todo\",\n    \"description\": \"I have to update todo\",\n    \"done\": false\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+					"name": "Document",
+					"item": [
+						{
+							"name": "CREATE Student",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const id = pm.response.json()._id;",
+											"pm.collectionVariables.set(\"DOCUMENT_ID\", id);"
+										],
+										"type": "text/javascript"
+									}
 								}
-							}
-						},
-						"url": {
-							"raw": "localhost:9200/custom_todos/_doc/{{DOCUMENT_ID}}",
-							"host": [
-								"localhost"
 							],
-							"port": "9200",
-							"path": [
-								"custom_todos",
-								"_doc",
-								"{{DOCUMENT_ID}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Search CustomTodo Data",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"query\": {\n        \"match\": {\n            \"name\": \"todo\"\n        }\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Alice\",\n\t\"age\": 17,\n\t\"average_score\": 81.1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ELASTIC_URL}}/students/_doc",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"students",
+										"_doc"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "localhost:9200/custom_todos/_search",
-							"host": [
-								"localhost"
-							],
-							"port": "9200",
-							"path": [
-								"custom_todos",
-								"_search"
-							]
+						{
+							"name": "READ Student",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ELASTIC_URL}}/students/_doc/{{DOCUMENT_ID}}",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"students",
+										"_doc",
+										"{{DOCUMENT_ID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UPDATE Student",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"John\",\n\t\"age\": 22,\n\t\"average_score\": 98.1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ELASTIC_URL}}/students/_doc/{{DOCUMENT_ID}}",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"students",
+										"_doc",
+										"{{DOCUMENT_ID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE Student",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{ELASTIC_URL}}/students/_doc/{{DOCUMENT_ID}}",
+									"host": [
+										"{{ELASTIC_URL}}"
+									],
+									"path": [
+										"students",
+										"_doc",
+										"{{DOCUMENT_ID}}"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Read CustomTodo Data",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "localhost:9200/custom_todos/_doc/{{DOCUMENT_ID}}",
-							"host": [
-								"localhost"
-							],
-							"port": "9200",
-							"path": [
-								"custom_todos",
-								"_doc",
-								"{{DOCUMENT_ID}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete CustomTodo Data",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "localhost:9200/custom_todos/_doc/{{DOCUMENT_ID}}",
-							"host": [
-								"localhost"
-							],
-							"port": "9200",
-							"path": [
-								"custom_todos",
-								"_doc",
-								"{{DOCUMENT_ID}}"
-							]
-						}
-					},
-					"response": []
+					]
 				}
 			]
+		},
+		{
+			"name": "Check Elastic Server",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ELASTIC_URL}}",
+					"host": [
+						"{{ELASTIC_URL}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "READ Example Index",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST_URL}}/example/index",
+					"host": [
+						"{{HOST_URL}}"
+					],
+					"path": [
+						"example",
+						"index"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "READ Example Todo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST_URL}}/example/type",
+					"host": [
+						"{{HOST_URL}}"
+					],
+					"path": [
+						"example",
+						"type"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "HOST_URL",
+			"value": "localhost:6000"
+		},
+		{
+			"key": "ELASTIC_URL",
+			"value": "localhost:9200"
+		},
+		{
+			"key": "DOCUMENT_ID",
+			"value": ""
 		}
 	]
 }
