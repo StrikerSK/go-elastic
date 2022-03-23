@@ -3,7 +3,7 @@ package elastic
 import (
 	"context"
 	"github.com/olivere/elastic/v7"
-	"go-elastic/src/types"
+	"github.com/strikersk/go-elastic/src/types"
 	"log"
 )
 

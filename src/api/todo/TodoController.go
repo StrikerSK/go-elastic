@@ -3,8 +3,8 @@ package todo
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"go-elastic/src/elastic"
-	"go-elastic/src/response"
+	"github.com/strikersk/go-elastic/src/elastic"
+	"github.com/strikersk/go-elastic/src/response"
 	"log"
 	"net/http"
 )

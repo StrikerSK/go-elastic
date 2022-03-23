@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"go-elastic/src/api/exampleType"
-	"go-elastic/src/api/todo"
-	"go-elastic/src/elastic"
+	"github.com/strikersk/go-elastic/src/api/exampleType"
+	"github.com/strikersk/go-elastic/src/api/todo"
+	"github.com/strikersk/go-elastic/src/elastic"
 	"log"
 	"net/http"
 	"os"

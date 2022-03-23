@@ -2,9 +2,9 @@ package exampleType
 
 import (
 	"github.com/gorilla/mux"
-	"go-elastic/src/api/todo"
-	"go-elastic/src/elastic"
-	"go-elastic/src/response"
+	"github.com/strikersk/go-elastic/src/api/todo"
+	"github.com/strikersk/go-elastic/src/elastic/body"
+	"github.com/strikersk/go-elastic/src/response"
 	"net/http"
 )
 
@@ -26,6 +26,6 @@ func createExampleType(w http.ResponseWriter, r *http.Request) {
 }
 
 func createExampleIndexBody(w http.ResponseWriter, r *http.Request) {
-	res := response.NewRequestResponse(http.StatusOK, elastic.NewElasticBody(elastic.NewDefaultSettings(), *elastic.CreateMappingMap(exampleStruct{})))
+	res := response.NewRequestResponse(http.StatusOK, body.NewDefaultElasticBody(*body.CreateMappingMap(exampleStruct{})))
 	response.WriteResponse(res, w)
 }

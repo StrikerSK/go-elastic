@@ -1,22 +1,11 @@
-package elastic
+package body
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 )
-
-type ElasticBody struct {
-	Settings ElasticSettings `json:"settings"`
-	Mappings ElasticMappings `json:"mappings"`
-}
-
-func NewElasticBody(settings ElasticSettings, sm ElasticMappings) ElasticBody {
-	return ElasticBody{
-		Settings: settings,
-		Mappings: sm,
-	}
-}
 
 //Structure mapping all structure field name and type
 type ElasticMappings struct {
@@ -24,7 +13,7 @@ type ElasticMappings struct {
 	Properties map[string]ElasticMappings `json:"properties,omitempty"`
 }
 
-//Constructor to create new ElasticMappings
+//NewMappings - Constructor to create new ElasticMapping instance
 func NewMappings(propType string, propertiesMapping map[string]ElasticMappings) *ElasticMappings {
 	return &ElasticMappings{
 		Type:       propType,
@@ -37,36 +26,35 @@ func (m *ElasticMappings) addType(key, value string) {
 	return
 }
 
-type ElasticSettings struct {
-	NumberOfShards   int `json:"number_of_shards"`
-	NumberOfReplicas int `json:"number_of_replicas"`
-}
-
-func NewDefaultSettings() ElasticSettings {
-	return ElasticSettings{
-		NumberOfShards:   1,
-		NumberOfReplicas: 1,
-	}
-}
-
 //Generating of ElasticSearches' simple index model to create
 func CreateMappingMap(userStruct interface{}) *ElasticMappings {
-	v := reflect.ValueOf(userStruct)
-	typeOfS := v.Type()
+	structValue := reflect.ValueOf(userStruct)
 
-	outputMapping := NewMappings("", make(map[string]ElasticMappings, v.NumField()))
-	for i := 0; i < v.NumField(); i++ {
-		fieldName := strings.ToLower(typeOfS.Field(i).Name)
-		fieldType, _ := resolveType(v.Field(i).Type().Kind().String())
+	outputMapping := NewMappings("", make(map[string]ElasticMappings, structValue.NumField()))
+	for i := 0; i < structValue.NumField(); i++ {
+		fieldObj := structValue.Field(i)
+
+		fieldName := strings.ToLower(structValue.Type().Field(i).Name)
+		fieldType, _ := resolveType(fieldObj.Type().Kind().String())
 		resolvedProperty := NewMappings(fieldType, nil)
 
 		//fmt.Printf("Name: %s, Kind: %v\n", fieldName, v.Field(i).Kind().String())
 		//In case of 'struct' type, we need to call recursion to resolve nested structure
-		if v.Field(i).Type().Kind().String() == "struct" {
-			nestedMapping := CreateMappingMap(v.Field(i).Interface())
-			resolvedProperty.Properties = nestedMapping.Properties
-			outputMapping.addType(fieldName, v.Field(i).Kind().String())
+		fieldKind := fieldObj.Type().Kind().String()
+		if fieldKind == "struct" {
+			resolvedProperty.Properties = CreateMappingMap(fieldObj.Interface()).Properties
+			outputMapping.addType(fieldName, fieldObj.Kind().String())
 			outputMapping.Properties[fieldName] = *resolvedProperty
+		} else if fieldKind == "slice" {
+			t := fieldObj.Kind()
+			switch t {
+			case reflect.Slice:
+				s := reflect.ValueOf(t)
+
+				for i := 0; i < s.Len(); i++ {
+					fmt.Println(s.Index(i))
+				}
+			}
 		}
 
 		outputMapping.Properties[fieldName] = *resolvedProperty

@@ -2,7 +2,7 @@ package todo
 
 import (
 	"encoding/json"
-	"go-elastic/src/elastic"
+	"github.com/strikersk/go-elastic/src/elastic/body"
 	"log"
 )
 
@@ -30,7 +30,7 @@ func (todo Todo) GetIndexName() string {
 
 //Mapping to every type property should be made to create index
 func CreateTodoIndexBody() []byte {
-	elasticBody := elastic.NewElasticBody(elastic.NewDefaultSettings(), *elastic.CreateMappingMap(Todo{}))
+	elasticBody := body.NewElasticBody(body.NewDefaultSettings(), *body.CreateMappingMap(Todo{}))
 
 	payload, err := json.Marshal(elasticBody)
 	if err != nil {
