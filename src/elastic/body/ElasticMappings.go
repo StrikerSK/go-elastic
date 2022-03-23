@@ -2,7 +2,6 @@ package body
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 )
@@ -46,15 +45,14 @@ func CreateMappingMap(userStruct interface{}) *ElasticMappings {
 			outputMapping.addType(fieldName, fieldObj.Kind().String())
 			outputMapping.Properties[fieldName] = *resolvedProperty
 		} else if fieldKind == "slice" {
-			t := fieldObj.Kind()
-			switch t {
-			case reflect.Slice:
-				s := reflect.ValueOf(t)
-
-				for i := 0; i < s.Len(); i++ {
-					fmt.Println(s.Index(i))
-				}
-			}
+			/*To resolve slice field we need to find element type of element represented by `fieldObj.Type().Elem()`.
+			Then we need to create new value of this type Calling `reflect.New`. Be aware that this structure will be pointer
+			which need to retrieve the value in this address, done with calling `reflect.Indirect`.
+			*/
+			rv := reflect.Indirect(reflect.New(fieldObj.Type().Elem())).Interface()
+			resolvedProperty.Properties = CreateMappingMap(rv).Properties
+			outputMapping.addType(fieldName, fieldObj.Kind().String())
+			outputMapping.Properties[fieldName] = *resolvedProperty
 		}
 
 		outputMapping.Properties[fieldName] = *resolvedProperty
