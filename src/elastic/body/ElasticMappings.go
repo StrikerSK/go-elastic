@@ -34,25 +34,34 @@ func CreateMappingMap(userStruct interface{}) *ElasticMappings {
 		fieldObj := structValue.Field(i)
 
 		fieldName := strings.ToLower(structValue.Type().Field(i).Name)
-		fieldType, _ := resolveType(fieldObj.Type().Kind().String())
-		resolvedProperty := NewMappings(fieldType, nil)
+		fieldKind := fieldObj.Type().Kind()
+
+		fieldType, _ := resolveType(fieldKind.String())
+		resolvedProperty := NewMappings(fieldType, make(map[string]ElasticMappings))
 
 		//fmt.Printf("Name: %s, Kind: %v\n", fieldName, v.Field(i).Kind().String())
 		//In case of 'struct' type, we need to call recursion to resolve nested structure
-		fieldKind := fieldObj.Type().Kind().String()
-		if fieldKind == "struct" {
-			resolvedProperty.Properties = CreateMappingMap(fieldObj.Interface()).Properties
+		if fieldKind == reflect.Struct {
+			nestedStructure := fieldObj.Interface()
+			resolvedProperty.Properties = CreateMappingMap(nestedStructure).Properties
 			outputMapping.addType(fieldName, fieldObj.Kind().String())
 			outputMapping.Properties[fieldName] = *resolvedProperty
-		} else if fieldKind == "slice" {
-			/*To resolve slice field we need to find element type of element represented by `fieldObj.Type().Elem()`.
+		} else if fieldKind == reflect.Slice {
+			/**
+			To resolve slice field we need to find element type of element represented by `fieldObj.Type().Elem()`.
 			Then we need to create new value of this type Calling `reflect.New`. Be aware that this structure will be pointer
 			which need to retrieve the value in this address, done with calling `reflect.Indirect`.
-			*/
-			rv := reflect.Indirect(reflect.New(fieldObj.Type().Elem())).Interface()
-			resolvedProperty.Properties = CreateMappingMap(rv).Properties
-			outputMapping.addType(fieldName, fieldObj.Kind().String())
-			outputMapping.Properties[fieldName] = *resolvedProperty
+			**/
+			fieldElem := fieldObj.Type().Elem()
+			if fieldElem.Kind() == reflect.Struct {
+				sliceStructure := reflect.Indirect(reflect.New(fieldElem)).Interface()
+				resolvedProperty.Properties = CreateMappingMap(sliceStructure).Properties
+				outputMapping.addType(fieldName, fieldObj.Kind().String())
+				outputMapping.Properties[fieldName] = *resolvedProperty
+			} else {
+				tmpType, _ := resolveType(fieldElem.Kind().String())
+				resolvedProperty.Type = tmpType
+			}
 		}
 
 		outputMapping.Properties[fieldName] = *resolvedProperty
@@ -85,7 +94,7 @@ func resolveType(input string) (output string, err error) {
 	case "struct":
 		output = "nested"
 	default:
-		err = errors.New("cannot resolve type " + input)
+		err = errors.New("cannot resolve type: " + input)
 	}
 	return
 }
