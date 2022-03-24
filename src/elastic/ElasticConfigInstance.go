@@ -3,6 +3,7 @@ package elastic
 import (
 	"context"
 	"github.com/olivere/elastic/v7"
+	"github.com/strikersk/go-elastic/src/api/todo/repository"
 	"log"
 	"os"
 	"sync"
@@ -37,6 +38,9 @@ func GetElasticInstance() *ElasticConfiguration {
 			configuration.ElasticClient = client
 			configuration.Context = context.Background()
 			elasticConfiguration = &configuration
+
+			repository.SetTodoRepository(repository.NewTodoRepository(client, context.Background()))
+
 			log.Println("ElasticSearch initialized...")
 		} else {
 			log.Println("ElasticSearch instance already created!")

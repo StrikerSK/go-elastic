@@ -1,4 +1,4 @@
-package todo
+package entity
 
 import (
 	"encoding/json"
@@ -7,25 +7,10 @@ import (
 )
 
 type Todo struct {
+	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Done        bool   `json:"done"`
-}
-
-func (todo *Todo) MarshalItem() ([]byte, error) {
-	bs, err := json.Marshal(todo)
-	return bs, err
-}
-
-func (todo *Todo) UnmarshalItem(bs []byte) error {
-	if err := json.Unmarshal(bs, todo); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (todo Todo) GetIndexName() string {
-	return TodosIndex
 }
 
 //Mapping to every type property should be made to create index

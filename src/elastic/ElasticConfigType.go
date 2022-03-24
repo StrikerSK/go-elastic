@@ -3,7 +3,6 @@ package elastic
 import (
 	"context"
 	"github.com/olivere/elastic/v7"
-	"github.com/strikersk/go-elastic/src/types"
 	"log"
 )
 
@@ -59,72 +58,4 @@ func (ec ElasticConfiguration) deleteIndex(indexName string) error {
 	}
 
 	return nil
-}
-
-func (ec ElasticConfiguration) SearchDocument(documentID string, targetClass types.MarshallingInterface) error {
-	indexName := targetClass.GetIndexName()
-	searchResult, err := ec.ElasticClient.
-		Get().
-		Index(indexName).
-		Id(documentID).
-		Do(ec.Context)
-
-	//TODO Create solution to transfer status code
-	//This might be always not found
-	if err != nil {
-		log.Printf("Search Index [%s/%s] Error: %v\n", indexName, documentID, err)
-		return err
-	}
-
-	resolvedStructure, err := searchResult.Source.MarshalJSON()
-	if err != nil {
-		log.Printf("Search Index [%s/%s] Error: %v\n", indexName, documentID, err)
-		return err
-	}
-
-	if err = targetClass.UnmarshalItem(resolvedStructure); err != nil {
-		log.Printf("Search Index [%s/%s] Error: %v\n", indexName, documentID, err)
-		return err
-	}
-
-	log.Printf("Search Index [%s/%s]: success\n", indexName, documentID)
-	return nil
-}
-
-func (ec ElasticConfiguration) InsertDocument(documentID string, input types.MarshallingInterface) (string, error) {
-	indexName := input.GetIndexName()
-
-	dataJSON, err := input.MarshalItem()
-	if err != nil {
-		log.Printf("Insert Document to Index [%s]: %v\n", indexName, err)
-		return "", err
-	}
-
-	contentBody := string(dataJSON)
-	replyCustom, err := ec.ElasticClient.Index().
-		Index(indexName).
-		Id(documentID).
-		BodyJson(contentBody).
-		Do(ec.Context)
-
-	if err != nil {
-		log.Printf("Insert Document to Index [%s]: %s\n", indexName, err)
-		return "", err
-	}
-
-	log.Printf("Insert Document to Index [%s]: success\n", indexName)
-	return replyCustom.Id, nil
-}
-
-func (ec ElasticConfiguration) DeleteDocument(documentID, indexName string) {
-	_, err := ec.ElasticClient.
-		Delete().
-		Index(indexName).
-		Id(documentID).
-		Do(ec.Context)
-
-	if err != nil {
-		log.Printf("Index Document [%s/%s] Delete: %v", indexName, documentID, err)
-		return
-	}
 }

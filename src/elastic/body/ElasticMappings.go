@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-//Structure mapping all structure field name and type
+//ElasticMappings - structure mapping all structure field name and type
 type ElasticMappings struct {
 	Type       string                     `json:"type,omitempty"`
 	Properties map[string]ElasticMappings `json:"properties,omitempty"`

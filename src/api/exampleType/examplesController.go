@@ -2,7 +2,7 @@ package exampleType
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/strikersk/go-elastic/src/api/todo"
+	"github.com/strikersk/go-elastic/src/api/todo/entity"
 	"github.com/strikersk/go-elastic/src/elastic/body"
 	"github.com/strikersk/go-elastic/src/response"
 	"net/http"
@@ -15,7 +15,7 @@ func EnrichRouterWithExamples(mainRouter *mux.Router) {
 }
 
 func createExampleType(w http.ResponseWriter, r *http.Request) {
-	customTodo := todo.Todo{
+	customTodo := entity.Todo{
 		Name:        "Example Create Todo",
 		Description: "Example Create Todo",
 		Done:        false,

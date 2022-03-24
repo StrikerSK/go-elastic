@@ -1,15 +1,14 @@
-package todo
+package controller
 
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/strikersk/go-elastic/src/elastic"
+	"github.com/strikersk/go-elastic/src/api/todo/entity"
+	"github.com/strikersk/go-elastic/src/api/todo/repository"
 	"github.com/strikersk/go-elastic/src/response"
 	"log"
 	"net/http"
 )
-
-const TodosIndex = "todos"
 
 func EnrichRouter(router *mux.Router) {
 	subRouter := router.PathPrefix("/todo").Subrouter()
@@ -23,14 +22,14 @@ func EnrichRouter(router *mux.Router) {
 }
 
 func createTodo(w http.ResponseWriter, r *http.Request) {
-	var todo Todo
+	var todo entity.Todo
 	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
 		res := response.NewRequestResponse(http.StatusInternalServerError, err)
 		response.WriteResponse(res, w)
 		return
 	}
 
-	responseId, err := elastic.GetElasticInstance().InsertDocument("", &todo)
+	responseId, err := repository.TodoRepository.InsertDocument("", todo)
 	if err != nil {
 		res := response.NewRequestResponse(http.StatusInternalServerError, err)
 		response.WriteResponse(res, w)
@@ -49,8 +48,8 @@ func readTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var todo Todo
-	if err := elastic.GetElasticInstance().SearchDocument(todoID, &todo); err != nil {
+	todo, err := repository.TodoRepository.SearchDocument(todoID)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -68,14 +67,13 @@ func removeTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	elastic.GetElasticInstance().DeleteDocument(todoID, TodosIndex)
+	_ = repository.TodoRepository.DeleteDocument(todoID)
 	res := response.NewRequestResponse(http.StatusOK, nil)
 	response.WriteResponse(res, w)
 }
 
 func putTodo(w http.ResponseWriter, r *http.Request) {
-	var todo Todo
-
+	var todo entity.Todo
 	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
@@ -90,7 +88,7 @@ func putTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	responseId, err := elastic.GetElasticInstance().InsertDocument(todoID, &todo)
+	responseId, err := repository.TodoRepository.InsertDocument(todoID, todo)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
