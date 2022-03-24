@@ -3,6 +3,7 @@ package body
 import (
 	"errors"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -70,28 +71,22 @@ func CreateMappingMap(userStruct interface{}) *ElasticMappings {
 }
 
 func resolveType(input string) (output string, err error) {
-	switch input {
-	case "string":
+	isInteger := regexp.MustCompile("^[u]?int\\d{0,2}")
+	isString := regexp.MustCompile("^string$")
+	isFloat := regexp.MustCompile("^float\\d{0,2}$")
+	isBool := regexp.MustCompile("^bool$")
+	isStruct := regexp.MustCompile("^struct$")
+
+	switch {
+	case isString.MatchString(input):
 		output = "text"
-	case "bool":
+	case isBool.MatchString(input):
 		output = "boolean"
-	case "uint8":
+	case isInteger.MatchString(input):
 		output = "number"
-	case "uint16":
-		output = "number"
-	case "uint32":
-		output = "number"
-	case "uint64":
-		output = "number"
-	case "int8":
-		output = "number"
-	case "int16":
-		output = "number"
-	case "int32":
-		output = "number"
-	case "int64":
-		output = "number"
-	case "struct":
+	case isFloat.MatchString(input):
+		output = "float"
+	case isStruct.MatchString(input):
 		output = "nested"
 	default:
 		err = errors.New("cannot resolve type: " + input)
