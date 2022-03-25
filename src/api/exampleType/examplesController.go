@@ -1,31 +1,30 @@
 package exampleType
 
 import (
-	"github.com/gorilla/mux"
+	"fmt"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/strikersk/go-elastic/src/api/todo/entity"
 	"github.com/strikersk/go-elastic/src/elastic/body"
 	"github.com/strikersk/go-elastic/src/response"
 	"net/http"
+	"time"
 )
 
-func EnrichRouterWithExamples(mainRouter *mux.Router) {
-	exampleRouter := mainRouter.PathPrefix("/example").Subrouter()
-	exampleRouter.HandleFunc("/index", createExampleIndexBody).Methods(http.MethodGet)
-	exampleRouter.HandleFunc("/type", createExampleType).Methods(http.MethodGet)
-}
-
-func createExampleType(w http.ResponseWriter, r *http.Request) {
+func CreateExampleType(ctx *fiber.Ctx) error {
 	customTodo := entity.Todo{
+		ID:          uuid.New().String(),
+		Time:        fmt.Sprintf("%d", time.Now().Unix()),
 		Name:        "Example Create Todo",
 		Description: "Example Create Todo",
 		Done:        false,
 	}
 
 	res := response.NewRequestResponse(http.StatusOK, customTodo)
-	response.WriteResponse(res, w)
+	return ctx.JSON(res)
 }
 
-func createExampleIndexBody(w http.ResponseWriter, r *http.Request) {
+func CreateExampleIndexBody(ctx *fiber.Ctx) error {
 	res := response.NewRequestResponse(http.StatusOK, body.NewDefaultElasticBody(*body.CreateMappingMap(exampleStruct{})))
-	response.WriteResponse(res, w)
+	return ctx.JSON(res)
 }

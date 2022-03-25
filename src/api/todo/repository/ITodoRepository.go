@@ -5,7 +5,8 @@ import (
 )
 
 type ITodoRepository interface {
-	SearchDocument(string) (entity.Todo, error)
+	SearchDocumentByID(string) (entity.Todo, error)
+	GetByStringQuery([]string) ([]entity.Todo, error)
 	InsertDocument(string, entity.Todo) (string, error)
 	DeleteDocument(string) error
 }

@@ -28,7 +28,7 @@ func (ec ElasticConfiguration) InitializeIndex(indexName string, indexBody []byt
 		return
 	}
 
-	log.Printf("Index [%s] Recreated\n", indexName)
+	log.Printf("Index [%s] recreated\n", indexName)
 }
 
 func (ec ElasticConfiguration) createIndex(indexName string, indexBody []byte) error {
@@ -53,7 +53,7 @@ func (ec ElasticConfiguration) indexExists(indexName string) (bool, error) {
 
 func (ec ElasticConfiguration) deleteIndex(indexName string) error {
 	if _, err := ec.ElasticClient.DeleteIndex(indexName).Do(ec.Context); err != nil {
-		log.Printf("Index [%s] Delete: %v\n", indexName, err)
+		log.Printf("Index [%s] delete: %v\n", indexName, err)
 		return err
 	}
 

@@ -1,111 +1,107 @@
 package controller
 
 import (
-	"encoding/json"
-	"github.com/gorilla/mux"
+	"errors"
+	"fmt"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/strikersk/go-elastic/src/api/todo/entity"
 	"github.com/strikersk/go-elastic/src/api/todo/repository"
-	"github.com/strikersk/go-elastic/src/response"
 	"log"
 	"net/http"
+	"time"
 )
 
-func EnrichRouter(router *mux.Router) {
-	subRouter := router.PathPrefix("/todo").Subrouter()
-	subRouter.HandleFunc("", createTodo).Methods(http.MethodPost)
-	subRouter.HandleFunc("/{id}", removeTodo).Methods(http.MethodDelete)
-	subRouter.HandleFunc("/{id}", putTodo).Methods(http.MethodPut)
-	subRouter.HandleFunc("/{id}", readTodo).Methods(http.MethodGet)
-
-	todosRouter := router.PathPrefix("/todos").Subrouter()
-	todosRouter.HandleFunc("", searchTodos).Methods(http.MethodGet)
-}
-
-func createTodo(w http.ResponseWriter, r *http.Request) {
-	var todo entity.Todo
-	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
-		res := response.NewRequestResponse(http.StatusInternalServerError, err)
-		response.WriteResponse(res, w)
-		return
+func CreateTodo(ctx *fiber.Ctx) error {
+	todo, err := extractBody(ctx)
+	if err != nil {
+		return err
 	}
+
+	todo.ID = uuid.New().String()
+	todo.Time = fmt.Sprintf("%d", time.Now().Unix())
 
 	responseId, err := repository.TodoRepository.InsertDocument("", todo)
 	if err != nil {
-		res := response.NewRequestResponse(http.StatusInternalServerError, err)
-		response.WriteResponse(res, w)
-		return
+		log.Printf("Repository error: %v\n", err)
+		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	res := response.NewRequestResponse(http.StatusCreated, map[string]string{"id": responseId, "status": "todo created"})
-	response.WriteResponse(res, w)
+	ctx.Status(http.StatusCreated)
+	return ctx.JSON(map[string]string{"id": responseId})
 }
 
-func readTodo(w http.ResponseWriter, r *http.Request) {
-	todoID, ok := mux.Vars(r)["id"]
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("Problem retrieving [id] from URL")
-		return
-	}
-
-	todo, err := repository.TodoRepository.SearchDocument(todoID)
+func ReadTodo(ctx *fiber.Ctx) error {
+	documentID, err := extractParam(ctx, "id")
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	res := response.NewRequestResponse(http.StatusOK, todo)
-	response.WriteResponse(res, w)
-}
-
-func removeTodo(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	todoID, ok := vars["id"]
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatal("Problem retrieving [id] from URL")
-		return
+	todo, err := repository.TodoRepository.SearchDocumentByID(documentID)
+	if err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(map[string]string{"data": err.Error()})
 	}
 
-	_ = repository.TodoRepository.DeleteDocument(todoID)
-	res := response.NewRequestResponse(http.StatusOK, nil)
-	response.WriteResponse(res, w)
+	return ctx.JSON(todo)
 }
 
-func putTodo(w http.ResponseWriter, r *http.Request) {
+func DeleteTodo(ctx *fiber.Ctx) error {
+	documentID, err := extractParam(ctx, "id")
+	if err != nil {
+		return err
+	}
+
+	if err = repository.TodoRepository.DeleteDocument(documentID); err != nil {
+		log.Printf("Delete error: %v\n", err)
+	}
+
+	return ctx.SendStatus(http.StatusOK)
+}
+
+func UpdateTodo(ctx *fiber.Ctx) error {
+	todo, err := extractBody(ctx)
+	if err != nil {
+		return err
+	}
+
+	documentID, err := extractParam(ctx, "id")
+	if err != nil {
+		return err
+	}
+
+	_, err = repository.TodoRepository.InsertDocument(documentID, todo)
+	if err != nil {
+		log.Printf("Repository error: %v\n", err)
+		return err
+	}
+
+	return ctx.SendStatus(http.StatusOK)
+}
+
+func SearchTodo(ctx *fiber.Ctx) error {
+	query := struct {
+		Query []string `query:"query"`
+	}{}
+
+	_ = ctx.QueryParser(&query)
+	todos, _ := repository.TodoRepository.GetByStringQuery(query.Query)
+	return ctx.JSON(todos)
+}
+
+func extractParam(ctx *fiber.Ctx, param string) (string, error) {
+	documentID := ctx.Params(param)
+	if documentID == "" {
+		return "", errors.New("id parameter cannot be empty")
+	}
+	return documentID, nil
+}
+
+func extractBody(ctx *fiber.Ctx) (entity.Todo, error) {
 	var todo entity.Todo
-	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Print(err.Error())
-		return
+	if err := ctx.BodyParser(&todo); err != nil {
+		log.Printf("Body parsing error: %v\n", err)
+		return entity.Todo{}, err
 	}
 
-	todoID, ok := mux.Vars(r)["id"]
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatal("Problem retrieving [id] from URL")
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	responseId, err := repository.TodoRepository.InsertDocument(todoID, todo)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Print(err.Error())
-		return
-	}
-
-	res := response.NewRequestResponse(
-		http.StatusOK,
-		map[string]string{
-			"id":     responseId,
-			"status": "todo updated",
-		},
-	)
-
-	response.WriteResponse(res, w)
-}
-
-func searchTodos(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Search todo log")
+	return todo, nil
 }

@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
+	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"github.com/strikersk/go-elastic/src/api/exampleType"
 	"github.com/strikersk/go-elastic/src/api/todo/controller"
 	"github.com/strikersk/go-elastic/src/api/todo/entity"
 	"github.com/strikersk/go-elastic/src/api/todo/repository"
 	"github.com/strikersk/go-elastic/src/elastic"
 	"log"
-	"net/http"
 	"os"
 )
 
@@ -17,23 +17,22 @@ func init() {
 }
 
 func main() {
-	router := mux.NewRouter().StrictSlash(true)
-	controller.EnrichRouter(router)
-	exampleType.EnrichRouterWithExamples(router)
+	app := fiber.New()
 
-	log.Println("Listening")
-	log.Println(http.ListenAndServe(":"+resolvePort(), router))
-}
+	apiPath := app.Group("/api")
 
-func createServer() *http.Server {
-	router := mux.NewRouter().StrictSlash(true)
-	controller.EnrichRouter(router)
-	exampleType.EnrichRouterWithExamples(router)
+	examplePath := apiPath.Group("/examples")
+	examplePath.Get("/index", exampleType.CreateExampleType)
+	examplePath.Get("/type", exampleType.CreateExampleIndexBody)
 
-	return &http.Server{
-		Addr:    resolvePort(),
-		Handler: router,
-	}
+	todoPath := app.Group("/todo")
+	todoPath.Post("", controller.CreateTodo)
+	todoPath.Put("/:id", controller.UpdateTodo)
+	todoPath.Delete("/:id", controller.DeleteTodo)
+	todoPath.Get("/search", controller.SearchTodo)
+	todoPath.Get("/:id", controller.ReadTodo)
+
+	log.Fatal(app.Listen(fmt.Sprintf(":%s", resolvePort())))
 }
 
 func resolvePort() (port string) {
