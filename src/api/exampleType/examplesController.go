@@ -25,6 +25,6 @@ func CreateExampleType(ctx *fiber.Ctx) error {
 }
 
 func CreateExampleIndexBody(ctx *fiber.Ctx) error {
-	res := response.NewRequestResponse(http.StatusOK, body.NewDefaultElasticBody(*body.CreateMappingMap(exampleStruct{})))
+	res := response.NewRequestResponse(http.StatusOK, body.NewDefaultElasticBody(*body.CreateElasticObject(exampleStruct{})))
 	return ctx.JSON(res)
 }

@@ -3,51 +3,35 @@ package elastic
 import (
 	"context"
 	"github.com/olivere/elastic/v7"
+	"github.com/strikersk/go-elastic/src/api/todo/entity"
 	"github.com/strikersk/go-elastic/src/api/todo/repository"
 	"log"
 	"os"
-	"sync"
 	"time"
 )
 
-var elasticLock = &sync.Mutex{}
-var elasticConfiguration *ElasticConfiguration
+func GetElasticInstance() {
+	log.Println("ElasticSearch initialization")
 
-func GetElasticInstance() *ElasticConfiguration {
-	//To prevent expensive lock operations
-	//This means that the cacheConnection field is already populated
-	if elasticConfiguration == nil {
-		elasticLock.Lock()
-		defer elasticLock.Unlock()
+	client, err := elastic.NewClient(
+		elastic.SetSniff(false),
+		elastic.SetURL(os.Getenv("ELASTIC_URL")),
+		elastic.SetHealthcheckInterval(5*time.Second),
+	)
 
-		//Only one goroutine can create the singleton instance.
-		if elasticConfiguration == nil {
-			var configuration ElasticConfiguration
-			log.Println("Creating ElasticSearch instance")
-			client, err := elastic.NewClient(
-				elastic.SetSniff(false),
-				elastic.SetURL(os.Getenv("ELASTIC_URL")),
-				elastic.SetHealthcheckInterval(5*time.Second),
-			)
-
-			if err != nil {
-				log.Printf("ElasticSearch Initialization error: %s\n", err)
-				os.Exit(1)
-			}
-
-			configuration.ElasticClient = client
-			configuration.Context = context.Background()
-			elasticConfiguration = &configuration
-
-			repository.SetTodoRepository(repository.NewTodoRepository(client, context.Background()))
-
-			log.Println("ElasticSearch initialized...")
-		} else {
-			log.Println("ElasticSearch instance already created!")
-		}
-	} else {
-		//log.Println("Application Cache instance already created!")
+	if err != nil {
+		log.Printf("ElasticSearch initialization error: %s\n", err)
+		os.Exit(1)
 	}
 
-	return elasticConfiguration
+	elasticConfig := ElasticConfiguration{
+		ElasticClient: client,
+		Context:       context.Background(),
+	}
+
+	elasticConfig.InitializeIndex(entity.TodoIndex, entity.CreateTodoIndexBody())
+
+	repository.SetTodoRepository(repository.NewElasticRepository(client, elasticConfig.Context))
+
+	log.Println("ElasticSearch initialization completed!")
 }

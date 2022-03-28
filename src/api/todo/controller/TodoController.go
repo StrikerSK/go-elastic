@@ -37,7 +37,7 @@ func ReadTodo(ctx *fiber.Ctx) error {
 		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	todo, err := repository.TodoRepository.SearchDocumentByID(documentID)
+	todo, err := repository.TodoRepository.GetByID(documentID)
 	if err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(map[string]string{"data": err.Error()})
 	}
@@ -84,7 +84,7 @@ func SearchTodo(ctx *fiber.Ctx) error {
 	}{}
 
 	_ = ctx.QueryParser(&query)
-	todos, _ := repository.TodoRepository.GetByStringQuery(query.Query)
+	todos, _ := repository.TodoRepository.SearchByStringQuery(query.Query)
 	return ctx.JSON(todos)
 }
 

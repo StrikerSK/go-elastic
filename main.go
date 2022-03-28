@@ -5,19 +5,19 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/strikersk/go-elastic/src/api/exampleType"
 	"github.com/strikersk/go-elastic/src/api/todo/controller"
-	"github.com/strikersk/go-elastic/src/api/todo/entity"
-	"github.com/strikersk/go-elastic/src/api/todo/repository"
 	"github.com/strikersk/go-elastic/src/elastic"
 	"log"
 	"os"
 )
 
 func init() {
-	elastic.GetElasticInstance().InitializeIndex(repository.TodoIndex, entity.CreateTodoIndexBody())
+	elastic.GetElasticInstance()
 }
 
 func main() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		StrictRouting: false,
+	})
 
 	apiPath := app.Group("/api")
 

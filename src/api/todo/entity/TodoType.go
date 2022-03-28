@@ -6,6 +6,8 @@ import (
 	"log"
 )
 
+const TodoIndex = "todos"
+
 type Todo struct {
 	ID          string `json:"id"`
 	Time        string `json:"time"`
@@ -16,7 +18,7 @@ type Todo struct {
 
 //Mapping to every type property should be made to create index
 func CreateTodoIndexBody() []byte {
-	elasticBody := body.NewElasticBody(body.NewDefaultSettings(), *body.CreateMappingMap(Todo{}))
+	elasticBody := body.NewElasticBody(body.NewDefaultSettings(), *body.CreateElasticObject(Todo{}))
 
 	payload, err := json.Marshal(elasticBody)
 	if err != nil {
