@@ -23,7 +23,7 @@ func NewTodoHandler(service ports.ITodoRepository) TodoHandler {
 }
 
 func (h TodoHandler) CreateTodo(ctx *fiber.Ctx) error {
-	todo, err := extractBody(ctx)
+	todo, err := h.extractBody(ctx)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (h TodoHandler) CreateTodo(ctx *fiber.Ctx) error {
 }
 
 func (h TodoHandler) ReadTodo(ctx *fiber.Ctx) error {
-	documentID, err := extractParam(ctx, "id")
+	documentID, err := h.extractParam(ctx, "id")
 	if err != nil {
 		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
@@ -56,7 +56,7 @@ func (h TodoHandler) ReadTodo(ctx *fiber.Ctx) error {
 }
 
 func (h TodoHandler) DeleteTodo(ctx *fiber.Ctx) error {
-	documentID, err := extractParam(ctx, "id")
+	documentID, err := h.extractParam(ctx, "id")
 	if err != nil {
 		return err
 	}
@@ -69,12 +69,12 @@ func (h TodoHandler) DeleteTodo(ctx *fiber.Ctx) error {
 }
 
 func (h TodoHandler) UpdateTodo(ctx *fiber.Ctx) error {
-	todo, err := extractBody(ctx)
+	todo, err := h.extractBody(ctx)
 	if err != nil {
 		return err
 	}
 
-	documentID, err := extractParam(ctx, "id")
+	documentID, err := h.extractParam(ctx, "id")
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (h TodoHandler) SearchTodo(ctx *fiber.Ctx) error {
 	return ctx.JSON(todos)
 }
 
-func extractParam(ctx *fiber.Ctx, param string) (string, error) {
+func (h TodoHandler) extractParam(ctx *fiber.Ctx, param string) (string, error) {
 	documentID := ctx.Params(param)
 	if documentID == "" {
 		return "", errors.New("id parameter cannot be empty")
@@ -106,7 +106,7 @@ func extractParam(ctx *fiber.Ctx, param string) (string, error) {
 	return documentID, nil
 }
 
-func extractBody(ctx *fiber.Ctx) (domain.Todo, error) {
+func (h TodoHandler) extractBody(ctx *fiber.Ctx) (domain.Todo, error) {
 	var todo domain.Todo
 	if err := ctx.BodyParser(&todo); err != nil {
 		log.Printf("Body parsing error: %v\n", err)

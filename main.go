@@ -7,6 +7,7 @@ import (
 	"github.com/strikersk/go-elastic/src/api/todo/controller"
 	"github.com/strikersk/go-elastic/src/api/todo/repository"
 	"github.com/strikersk/go-elastic/src/elastic"
+	"github.com/strikersk/go-elastic/src/elastic/core"
 	"log"
 	"os"
 )
@@ -16,13 +17,16 @@ func main() {
 		StrictRouting: false,
 	})
 
+	mappingFactory := core.NewElasticMappingFactory()
+	indexBuilder := core.NewElasticIndexBuilder(mappingFactory)
+	exampleHandler := exampleType.NewExampleTypeHandler(indexBuilder)
+
 	apiPath := app.Group("/api")
-
 	examplePath := apiPath.Group("/examples")
-	examplePath.Get("/index", exampleType.CreateExampleType)
-	examplePath.Get("/type", exampleType.CreateExampleIndexBody)
+	examplePath.Get("/index", exampleHandler.CreateExampleType)
+	examplePath.Get("/type", exampleHandler.CreateExampleIndexBody)
 
-	elasticConfiguration := elastic.NewElasticConfiguration()
+	elasticConfiguration := elastic.NewElasticConfiguration(indexBuilder)
 	elasticRepo := repository.NewElasticRepository(elasticConfiguration)
 	handler := controller.NewTodoHandler(elasticRepo)
 

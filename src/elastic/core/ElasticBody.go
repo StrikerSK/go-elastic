@@ -18,3 +18,18 @@ func NewElasticBody(settings ElasticSettings, mappings ElasticMappings) ElasticB
 		Mappings: mappings,
 	}
 }
+
+type ElasticIndexBuilder struct {
+	mappingFactory ElasticMappingFactory
+}
+
+func NewElasticIndexBuilder(mappingFactory ElasticMappingFactory) ElasticIndexBuilder {
+	return ElasticIndexBuilder{
+		mappingFactory: mappingFactory,
+	}
+}
+
+func (r ElasticIndexBuilder) BuildIndex(structure interface{}) ElasticBody {
+	mapping := *r.mappingFactory.CreateElasticObject(structure)
+	return NewDefaultElasticBody(mapping)
+}

@@ -17,10 +17,13 @@ type TodoElasticRepository struct {
 }
 
 func NewElasticRepository(config elastic2.ElasticConfiguration) *TodoElasticRepository {
+	indexName := "todos"
+	config.InitializeIndex(indexName, domain.Todo{})
+
 	return &TodoElasticRepository{
 		client:    config.ElasticClient,
 		context:   config.Context,
-		indexName: "todos",
+		indexName: indexName,
 	}
 }
 

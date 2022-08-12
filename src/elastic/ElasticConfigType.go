@@ -2,7 +2,9 @@ package elastic
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/olivere/elastic/v7"
+	"github.com/strikersk/go-elastic/src/elastic/core"
 	"log"
 	"os"
 	"time"
@@ -11,9 +13,10 @@ import (
 type ElasticConfiguration struct {
 	ElasticClient *elastic.Client
 	Context       context.Context
+	IndexBuilder  core.ElasticIndexBuilder
 }
 
-func NewElasticConfiguration() ElasticConfiguration {
+func NewElasticConfiguration(indexBuilder core.ElasticIndexBuilder) ElasticConfiguration {
 	log.Println("ElasticSearch initialization")
 
 	client, err := elastic.NewClient(
@@ -30,10 +33,11 @@ func NewElasticConfiguration() ElasticConfiguration {
 	return ElasticConfiguration{
 		ElasticClient: client,
 		Context:       context.Background(),
+		IndexBuilder:  indexBuilder,
 	}
 }
 
-func (ec ElasticConfiguration) InitializeIndex(indexName string, indexBody []byte) {
+func (ec ElasticConfiguration) InitializeIndex(indexName string, inputStruct interface{}) {
 	exists, err := ec.indexExists(indexName)
 	if err != nil {
 		return
@@ -46,7 +50,8 @@ func (ec ElasticConfiguration) InitializeIndex(indexName string, indexBody []byt
 		}
 	}
 
-	if err = ec.createIndex(indexName, indexBody); err != nil {
+	txtValue, _ := json.Marshal(ec.IndexBuilder.BuildIndex(inputStruct))
+	if err = ec.createIndex(indexName, txtValue); err != nil {
 		return
 	}
 
