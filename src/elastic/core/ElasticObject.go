@@ -1,30 +1,46 @@
-package body
+package core
 
 import (
 	"errors"
+	"log"
 	"reflect"
 	"regexp"
 	"strings"
 )
 
+type PropertyMap map[string]ElasticMappings
+
+func (m PropertyMap) SetProperty(value string, mappings ElasticMappings) {
+	m[value] = mappings
+}
+
 //ElasticMappings - structure mapping all structure field name and type
 type ElasticMappings struct {
-	Type       string                     `json:"type,omitempty"`
-	Properties map[string]ElasticMappings `json:"properties,omitempty"`
+	Type       string      `json:"type,omitempty"`
+	Properties PropertyMap `json:"properties,omitempty"`
 }
 
 /*
 NewElasticMappings - Constructor to create new ElasticMapping instance.
 */
-func NewElasticMappings(propType string, propMapping map[string]ElasticMappings) *ElasticMappings {
+func NewElasticMappings(propertyType string, propertyMapping PropertyMap) *ElasticMappings {
 	return &ElasticMappings{
-		Type:       propType,
-		Properties: propMapping,
+		Type:       propertyType,
+		Properties: propertyMapping,
 	}
 }
 
 func (m *ElasticMappings) addType(key, value string) {
-	m.Properties[key] = ElasticMappings{Type: value}
+	mapping := ElasticMappings{
+		Type: value,
+	}
+
+	m.Properties.SetProperty(key, mapping)
+	return
+}
+
+func (m *ElasticMappings) setMapping(key string, mapping ElasticMappings) {
+	m.Properties.SetProperty(key, mapping)
 	return
 }
 
@@ -32,8 +48,8 @@ func (m *ElasticMappings) addType(key, value string) {
 CreateElasticObject - Generating of ElasticSearch's simple index model to create. Normally this should work with
 nested structs and slices as far as it was tested.
 */
-func CreateElasticObject(userStruct interface{}) *ElasticMappings {
-	structValue := reflect.ValueOf(userStruct)
+func CreateElasticObject(customStruct interface{}) *ElasticMappings {
+	structValue := reflect.ValueOf(customStruct)
 
 	outputMapping := NewElasticMappings("", make(map[string]ElasticMappings, structValue.NumField()))
 	for i := 0; i < structValue.NumField(); i++ {
@@ -43,16 +59,17 @@ func CreateElasticObject(userStruct interface{}) *ElasticMappings {
 		fieldKind := fieldObj.Type().Kind()
 
 		fieldType, _ := resolveType(fieldKind.String())
-		resolvedProperty := NewElasticMappings(fieldType, make(map[string]ElasticMappings))
+		nestedMapping := NewElasticMappings(fieldType, make(map[string]ElasticMappings))
 
 		/*
 			In case of 'struct' type, we need to call recursion to resolve nested structure
 		*/
 		if fieldKind == reflect.Struct {
-			nestedStructure := fieldObj.Interface()
-			resolvedProperty.Properties = CreateElasticObject(nestedStructure).Properties
-			outputMapping.addType(fieldName, fieldObj.Kind().String())
-			outputMapping.Properties[fieldName] = *resolvedProperty
+			tmpProperties := CreateElasticObject(fieldObj.Interface())
+			tmpProperties.Type = reflect.Struct.String()
+
+			nestedMapping.setMapping(fieldType, *tmpProperties)
+			outputMapping.setMapping(fieldName, *nestedMapping)
 		} else if fieldKind == reflect.Slice {
 			/**
 			To resolve slice field we need to find element type of element represented by `fieldObj.Type().Elem()`.
@@ -62,22 +79,27 @@ func CreateElasticObject(userStruct interface{}) *ElasticMappings {
 			fieldElem := fieldObj.Type().Elem()
 			if fieldElem.Kind() == reflect.Struct {
 				sliceStructure := reflect.Indirect(reflect.New(fieldElem)).Interface()
-				resolvedProperty.Properties = CreateElasticObject(sliceStructure).Properties
+				nestedMapping.Properties = CreateElasticObject(sliceStructure).Properties
+
 				outputMapping.addType(fieldName, fieldObj.Kind().String())
-				outputMapping.Properties[fieldName] = *resolvedProperty
+				outputMapping.Properties[fieldName] = *nestedMapping
 			} else {
-				tmpType, _ := resolveType(fieldElem.Kind().String())
-				resolvedProperty.Type = tmpType
+				tmpType, err := resolveType(fieldElem.Kind().String())
+				if err != nil {
+					log.Println(err)
+				}
+
+				nestedMapping.Type = tmpType
 			}
 		}
 
-		outputMapping.Properties[fieldName] = *resolvedProperty
+		outputMapping.Properties[fieldName] = *nestedMapping
 	}
 	return outputMapping
 }
 
 func resolveType(input string) (output string, err error) {
-	isInteger := regexp.MustCompile("^[u]?int\\d{0,2}")
+	isInteger := regexp.MustCompile("^u?int\\d{0,2}")
 	isString := regexp.MustCompile("^string$")
 	isFloat := regexp.MustCompile("^float\\d{0,2}$")
 	isBool := regexp.MustCompile("^bool$")

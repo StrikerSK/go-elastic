@@ -1,12 +1,10 @@
-package entity
+package domain
 
 import (
 	"encoding/json"
-	"github.com/strikersk/go-elastic/src/elastic/body"
+	"github.com/strikersk/go-elastic/src/elastic/core"
 	"log"
 )
-
-const TodoIndex = "todos"
 
 type Todo struct {
 	ID          string `json:"id"`
@@ -18,7 +16,7 @@ type Todo struct {
 
 //Mapping to every type property should be made to create index
 func CreateTodoIndexBody() []byte {
-	elasticBody := body.NewElasticBody(body.NewDefaultSettings(), *body.CreateElasticObject(Todo{}))
+	elasticBody := core.NewElasticBody(core.NewDefaultSettings(), *core.CreateElasticObject(Todo{}))
 
 	payload, err := json.Marshal(elasticBody)
 	if err != nil {

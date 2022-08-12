@@ -1,4 +1,4 @@
-package body
+package core
 
 type ElasticBody struct {
 	Settings ElasticSettings `json:"settings"`

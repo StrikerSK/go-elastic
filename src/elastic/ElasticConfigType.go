@@ -4,11 +4,33 @@ import (
 	"context"
 	"github.com/olivere/elastic/v7"
 	"log"
+	"os"
+	"time"
 )
 
 type ElasticConfiguration struct {
 	ElasticClient *elastic.Client
 	Context       context.Context
+}
+
+func NewElasticConfiguration() ElasticConfiguration {
+	log.Println("ElasticSearch initialization")
+
+	client, err := elastic.NewClient(
+		elastic.SetSniff(false),
+		elastic.SetURL(os.Getenv("ELASTIC_URL")),
+		elastic.SetHealthcheckInterval(5*time.Second),
+	)
+
+	if err != nil {
+		log.Printf("ElasticSearch initialization error: %s\n", err)
+		os.Exit(1)
+	}
+
+	return ElasticConfiguration{
+		ElasticClient: client,
+		Context:       context.Background(),
+	}
 }
 
 func (ec ElasticConfiguration) InitializeIndex(indexName string, indexBody []byte) {
