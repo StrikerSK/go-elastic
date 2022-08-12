@@ -2,47 +2,12 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"reflect"
 	"regexp"
 	"strings"
 )
-
-type PropertyMap map[string]ElasticMappings
-
-func (m PropertyMap) SetProperty(value string, mappings ElasticMappings) {
-	m[value] = mappings
-}
-
-//ElasticMappings - structure mapping all structure field name and type
-type ElasticMappings struct {
-	Type       string      `json:"type,omitempty"`
-	Properties PropertyMap `json:"properties,omitempty"`
-}
-
-/*
-NewElasticMappings - Constructor to create new ElasticMapping instance.
-*/
-func NewElasticMappings(propertyType string, propertyMapping PropertyMap) *ElasticMappings {
-	return &ElasticMappings{
-		Type:       propertyType,
-		Properties: propertyMapping,
-	}
-}
-
-func (m *ElasticMappings) addType(key, value string) {
-	mapping := ElasticMappings{
-		Type: value,
-	}
-
-	m.Properties.SetProperty(key, mapping)
-	return
-}
-
-func (m *ElasticMappings) setMapping(key string, mapping ElasticMappings) {
-	m.Properties.SetProperty(key, mapping)
-	return
-}
 
 /*
 CreateElasticObject - Generating of ElasticSearch's simple index model to create. Normally this should work with
@@ -58,31 +23,30 @@ func CreateElasticObject(customStruct interface{}) *ElasticMappings {
 		fieldName := strings.ToLower(structValue.Type().Field(i).Name)
 		fieldKind := fieldObj.Type().Kind()
 
-		fieldType, _ := resolveType(fieldKind.String())
+		fieldType, err := resolveType(fieldKind.String())
+		if err != nil {
+			fmt.Println(err)
+		}
+
 		nestedMapping := NewElasticMappings(fieldType, make(map[string]ElasticMappings))
 
 		/*
 			In case of 'struct' type, we need to call recursion to resolve nested structure
 		*/
 		if fieldKind == reflect.Struct {
-			tmpProperties := CreateElasticObject(fieldObj.Interface())
-			tmpProperties.Type = reflect.Struct.String()
-
-			nestedMapping.setMapping(fieldType, *tmpProperties)
-			outputMapping.setMapping(fieldName, *nestedMapping)
+			nestedMapping.Properties = CreateElasticObject(fieldObj.Interface()).Properties
 		} else if fieldKind == reflect.Slice {
 			/**
 			To resolve slice field we need to find element type of element represented by `fieldObj.Type().Elem()`.
 			Then we need to create new value of this type Calling `reflect.New`. Be aware that this structure will be pointer
 			which need to retrieve the value in this address, done with calling `reflect.Indirect`.
 			**/
+
+			// Elem() - seems to work on slice's elements
 			fieldElem := fieldObj.Type().Elem()
 			if fieldElem.Kind() == reflect.Struct {
 				sliceStructure := reflect.Indirect(reflect.New(fieldElem)).Interface()
 				nestedMapping.Properties = CreateElasticObject(sliceStructure).Properties
-
-				outputMapping.addType(fieldName, fieldObj.Kind().String())
-				outputMapping.Properties[fieldName] = *nestedMapping
 			} else {
 				tmpType, err := resolveType(fieldElem.Kind().String())
 				if err != nil {
@@ -93,7 +57,7 @@ func CreateElasticObject(customStruct interface{}) *ElasticMappings {
 			}
 		}
 
-		outputMapping.Properties[fieldName] = *nestedMapping
+		outputMapping.setMapping(fieldName, *nestedMapping)
 	}
 	return outputMapping
 }
