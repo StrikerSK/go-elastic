@@ -30,7 +30,7 @@ func main() {
 	elasticRepo := repository.NewElasticRepository(elasticConfiguration)
 	handler := controller.NewTodoHandler(elasticRepo)
 
-	todoPath := app.Group("/todo")
+	todoPath := apiPath.Group("/todo")
 	todoPath.Post("", handler.CreateTodo)
 	todoPath.Put("/:id", handler.UpdateTodo)
 	todoPath.Delete("/:id", handler.DeleteTodo)
