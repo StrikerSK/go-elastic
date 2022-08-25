@@ -1,8 +1,7 @@
-package elastic
+package elasticConfig
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/olivere/elastic/v7"
 	"github.com/strikersk/go-elastic/src/elastic/core"
 	"log"
@@ -37,25 +36,31 @@ func NewElasticConfiguration(indexBuilder core.ElasticIndexBuilder) ElasticConfi
 	}
 }
 
-func (ec ElasticConfiguration) InitializeIndex(indexName string, inputStruct interface{}) {
+func (ec ElasticConfiguration) InitializeIndex(indexName string, inputStruct interface{}) error {
 	exists, err := ec.indexExists(indexName)
 	if err != nil {
-		return
+		return err
 	}
 
 	if exists {
-		log.Printf("Index [%s] Initialize: index already exists\n", indexName)
+		log.Printf("Index [%s] recreating!\n", indexName)
 		if err = ec.deleteIndex(indexName); err != nil {
-			return
+			return err
 		}
+	} else {
+		log.Printf("Index [%s] creating!\n", indexName)
 	}
 
-	txtValue, _ := json.Marshal(ec.IndexBuilder.BuildIndex(inputStruct))
-	if err = ec.createIndex(indexName, txtValue); err != nil {
-		return
+	indexData, err := ec.IndexBuilder.BuildAndMarshallIndex(inputStruct)
+	if err != nil {
+		return err
 	}
 
-	log.Printf("Index [%s] recreated\n", indexName)
+	if err = ec.createIndex(indexName, indexData); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ec ElasticConfiguration) createIndex(indexName string, indexBody []byte) error {
@@ -64,23 +69,23 @@ func (ec ElasticConfiguration) createIndex(indexName string, indexBody []byte) e
 		return err
 	}
 
-	log.Printf("Index [%s] Create: success\n", indexName)
+	log.Printf("Index [%s] created successfully!\n", indexName)
 	return nil
 }
 
 func (ec ElasticConfiguration) indexExists(indexName string) (bool, error) {
 	exists, err := ec.ElasticClient.IndexExists(indexName).Do(ec.Context)
 	if err != nil {
-		log.Printf("Index [%s] existance check: %v\n", indexName, err)
-		return exists, err
-	} else {
-		return exists, nil
+		log.Printf("Index [%s] exist error: %v\n", indexName, err)
+		return false, err
 	}
+
+	return exists, nil
 }
 
 func (ec ElasticConfiguration) deleteIndex(indexName string) error {
 	if _, err := ec.ElasticClient.DeleteIndex(indexName).Do(ec.Context); err != nil {
-		log.Printf("Index [%s] delete: %v\n", indexName, err)
+		log.Printf("Index [%s] delete error: %v\n", indexName, err)
 		return err
 	}
 

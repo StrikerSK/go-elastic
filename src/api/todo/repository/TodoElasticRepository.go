@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/olivere/elastic/v7"
 	"github.com/strikersk/go-elastic/src/api/todo/entity"
-	elastic2 "github.com/strikersk/go-elastic/src/elastic"
+	elastic2 "github.com/strikersk/go-elastic/src/elastic/config"
 	"log"
 	"reflect"
 )
@@ -18,7 +18,10 @@ type TodoElasticRepository struct {
 
 func NewElasticRepository(config elastic2.ElasticConfiguration) *TodoElasticRepository {
 	indexName := "todos"
-	config.InitializeIndex(indexName, domain.Todo{})
+	err := config.InitializeIndex(indexName, domain.Todo{})
+	if err != nil {
+		panic(err)
+	}
 
 	return &TodoElasticRepository{
 		client:    config.ElasticClient,

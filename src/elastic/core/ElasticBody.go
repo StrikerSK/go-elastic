@@ -1,5 +1,7 @@
 package core
 
+import "encoding/json"
+
 type ElasticBody struct {
 	Settings ElasticSettings `json:"settings"`
 	Mappings ElasticMappings `json:"mappings"`
@@ -32,4 +34,13 @@ func NewElasticIndexBuilder(mappingFactory ElasticMappingFactory) ElasticIndexBu
 func (r ElasticIndexBuilder) BuildIndex(structure interface{}) ElasticBody {
 	mapping := *r.mappingFactory.CreateElasticObject(structure)
 	return NewDefaultElasticBody(mapping)
+}
+
+func (r ElasticIndexBuilder) BuildAndMarshallIndex(structure interface{}) ([]byte, error) {
+	indexData, err := json.Marshal(r.BuildIndex(structure))
+	if err != nil {
+		return nil, err
+	}
+
+	return indexData, nil
 }
