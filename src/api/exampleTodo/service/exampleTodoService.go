@@ -25,10 +25,11 @@ func (ExampleTodoService) GenerateExampleTodo() todoDomain.Todo {
 		Time:        fmt.Sprintf("%d", time.Now().Unix()),
 		Name:        "Example Create Todo",
 		Description: "Example Create Todo",
+		Tags:        []string{"test", "testing", "qa"},
 		Done:        false,
 	}
 }
 
-func (r ExampleTodoService) CreateExampleIndexBody() elasticCore.ElasticBody {
+func (r ExampleTodoService) CreateExampleIndex() elasticCore.ElasticBody {
 	return r.indexBuilder.BuildIndex(exampleDomain.ExampleStruct{})
 }

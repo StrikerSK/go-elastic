@@ -15,10 +15,10 @@ func NewExampleTodoHandler(service exampleService.ExampleTodoService) ExampleTod
 	}
 }
 
-func (h ExampleTodoHandler) CreateExampleType(ctx *fiber.Ctx) error {
+func (h ExampleTodoHandler) CreateExampleTodo(ctx *fiber.Ctx) error {
 	return ctx.JSON(h.service.GenerateExampleTodo())
 }
 
-func (h ExampleTodoHandler) CreateExampleIndexBody(ctx *fiber.Ctx) error {
-	return ctx.JSON(h.service.CreateExampleIndexBody())
+func (h ExampleTodoHandler) CreateExampleIndex(ctx *fiber.Ctx) error {
+	return ctx.JSON(h.service.CreateExampleIndex())
 }

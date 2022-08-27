@@ -28,8 +28,8 @@ func main() {
 	apiPath := app.Group("/api")
 
 	examplePath := apiPath.Group("/examples")
-	examplePath.Get("/index", exHdl.CreateExampleType)
-	examplePath.Get("/type", exHdl.CreateExampleIndexBody)
+	examplePath.Get("/index", exHdl.CreateExampleIndex)
+	examplePath.Get("/type", exHdl.CreateExampleTodo)
 
 	elasticRepo := todoRepository.NewElasticRepository(elasticConfiguration)
 	handler := todoController.NewTodoHandler(elasticRepo)
