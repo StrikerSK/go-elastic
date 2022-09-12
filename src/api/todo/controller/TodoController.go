@@ -22,7 +22,16 @@ func NewTodoHandler(service ports.ITodoRepository) TodoHandler {
 	}
 }
 
-func (h TodoHandler) CreateTodo(ctx *fiber.Ctx) error {
+func (h TodoHandler) EnrichRouter(apiPath fiber.Router) {
+	todoPath := apiPath.Group("/todo")
+	todoPath.Post("", h.createTodo)
+	todoPath.Put("/:id", h.updateTodo)
+	todoPath.Delete("/:id", h.deleteTodo)
+	todoPath.Get("/search", h.searchTodo)
+	todoPath.Get("/:id", h.readTodo)
+}
+
+func (h TodoHandler) createTodo(ctx *fiber.Ctx) error {
 	todo, err := h.extractBody(ctx)
 	if err != nil {
 		return err
@@ -41,7 +50,7 @@ func (h TodoHandler) CreateTodo(ctx *fiber.Ctx) error {
 	return ctx.JSON(map[string]string{"id": responseId})
 }
 
-func (h TodoHandler) ReadTodo(ctx *fiber.Ctx) error {
+func (h TodoHandler) readTodo(ctx *fiber.Ctx) error {
 	documentID, err := h.extractParam(ctx, "id")
 	if err != nil {
 		return fiber.NewError(http.StatusBadRequest, err.Error())
@@ -55,7 +64,7 @@ func (h TodoHandler) ReadTodo(ctx *fiber.Ctx) error {
 	return ctx.JSON(todo)
 }
 
-func (h TodoHandler) DeleteTodo(ctx *fiber.Ctx) error {
+func (h TodoHandler) deleteTodo(ctx *fiber.Ctx) error {
 	documentID, err := h.extractParam(ctx, "id")
 	if err != nil {
 		return err
@@ -68,7 +77,7 @@ func (h TodoHandler) DeleteTodo(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(http.StatusOK)
 }
 
-func (h TodoHandler) UpdateTodo(ctx *fiber.Ctx) error {
+func (h TodoHandler) updateTodo(ctx *fiber.Ctx) error {
 	todo, err := h.extractBody(ctx)
 	if err != nil {
 		return err
@@ -88,7 +97,7 @@ func (h TodoHandler) UpdateTodo(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(http.StatusOK)
 }
 
-func (h TodoHandler) SearchTodo(ctx *fiber.Ctx) error {
+func (h TodoHandler) searchTodo(ctx *fiber.Ctx) error {
 	query := struct {
 		Query []string `query:"query"`
 	}{}

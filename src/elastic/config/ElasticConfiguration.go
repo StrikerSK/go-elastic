@@ -18,9 +18,14 @@ type ElasticConfiguration struct {
 func NewElasticConfiguration(indexBuilder core.ElasticIndexBuilder) ElasticConfiguration {
 	log.Println("ElasticSearch initialization")
 
+	elasticUrl := os.Getenv("ELASTIC_URL")
+	if elasticUrl == "" {
+		elasticUrl = "http://localhost:9200"
+	}
+
 	client, err := elastic.NewClient(
 		elastic.SetSniff(false),
-		elastic.SetURL(os.Getenv("ELASTIC_URL")),
+		elastic.SetURL(elasticUrl),
 		elastic.SetHealthcheckInterval(5*time.Second),
 	)
 

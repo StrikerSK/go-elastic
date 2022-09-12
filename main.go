@@ -34,13 +34,7 @@ func main() {
 	elasticRepo := todoRepository.NewElasticRepository(elasticConfiguration)
 	handler := todoController.NewTodoHandler(elasticRepo)
 
-	todoPath := apiPath.Group("/todo")
-	todoPath.Post("", handler.CreateTodo)
-	todoPath.Put("/:id", handler.UpdateTodo)
-	todoPath.Delete("/:id", handler.DeleteTodo)
-	todoPath.Get("/search", handler.SearchTodo)
-	todoPath.Get("/:id", handler.ReadTodo)
-
+	handler.EnrichRouter(apiPath)
 	log.Fatal(app.Listen(resolvePort()))
 }
 
@@ -49,7 +43,7 @@ func resolvePort() (port string) {
 
 	if port == "" {
 		log.Printf("Default PORT value used\n")
-		port = "5000"
+		port = "4000"
 	}
 
 	return fmt.Sprintf(":%s", port)

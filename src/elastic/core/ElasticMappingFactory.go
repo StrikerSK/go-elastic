@@ -15,11 +15,6 @@ func NewElasticMappingFactory() ElasticMappingFactory {
 	return ElasticMappingFactory{}
 }
 
-//func (r ElasticMappingFactory) createMap(customStruct interface{}) map[string]interface{} {
-//	return map[string]interface{}{
-//		"properties": r.CreateElasticObject(customStruct),
-//	}}
-
 /*
 CreateElasticObject - Generating of ElasticSearch's simple index model to create. Normally this should work with
 nested structs and slices as far as it was tested.
