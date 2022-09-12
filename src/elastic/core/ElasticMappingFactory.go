@@ -35,7 +35,6 @@ func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *El
 		fieldName := strings.ToLower(structValue.Type().Field(i).Name)
 
 		isFieldAnonymous := structTypeOf.Field(i).Anonymous
-		isFieldExported := structTypeOf.Field(i).IsExported()
 
 		fieldType, err := r.resolveType(fieldKind.String())
 		if err != nil {
@@ -48,9 +47,14 @@ func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *El
 		/*
 			In case of 'struct' type, we need to call recursion to resolve nested structure
 		*/
-		if fieldKind == reflect.Struct && !isFieldAnonymous && isFieldExported {
+		if fieldKind == reflect.Struct {
 			properties := r.CreateElasticObject(fieldObj.Interface())
-			nestedMapping.setPropertiesFromMapping(properties)
+			if !isFieldAnonymous {
+				nestedMapping.setPropertiesFromMapping(properties)
+			} else {
+				outputMapping.setPropertiesFromMapping(properties)
+				return outputMapping
+			}
 		} else if fieldKind == reflect.Slice {
 			/**
 			To resolve slice field we need to find element type of element represented by `fieldObj.Type().Elem()`.
@@ -72,67 +76,11 @@ func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *El
 
 				nestedMapping.setType(tmpType)
 			}
-		} else if fieldKind == reflect.Struct && isFieldAnonymous {
-			properties := r.CreateElasticObject(fieldObj.Interface())
-			outputMapping.setPropertiesFromMapping(properties)
 		}
 		outputMapping.changeProperties(fieldName, *nestedMapping)
 	}
 	return outputMapping
 }
-
-//func (r ElasticMappingFactory) CreateElasticObjectConcept(customStruct interface{}) *ElasticMappings {
-//	structTypeOf := reflect.TypeOf(customStruct)
-//
-//	outputMapping := NewElasticMappings("", make(map[string]ElasticMappings, structTypeOf.NumField()))
-//	for i := 0; i < structTypeOf.NumField(); i++ {
-//		fieldObj := structTypeOf.Field(i)
-//		fieldKind := fieldObj.Type.Kind()
-//
-//		isAnonymous := structTypeOf.Field(i).Anonymous
-//		log.Println("typeOf: ", structTypeOf.Field(i).Type)
-//
-//		fieldType, err := r.resolveType(fieldKind.String())
-//		if err != nil {
-//			fmt.Println(err)
-//		}
-//
-//		nestedMapping := NewElasticMappings(fieldType, make(map[string]ElasticMappings))
-//
-//		/*
-//			In case of 'struct' type, we need to call recursion to resolve nested structure
-//		*/
-//		if fieldKind == reflect.Struct && !isAnonymous {
-//			nestedMapping.Properties = r.CreateElasticObjectConcept(fieldObj.Type).Properties
-//		} else if fieldKind == reflect.Slice {
-//			/**
-//			To resolve slice field we need to find element type of element represented by `fieldObj.Type().Elem()`.
-//			Then we need to create new value of this type Calling `reflect.New`. Be aware that this structure will be pointer
-//			which need to retrieve the value in this address, done with calling `reflect.Indirect`.
-//			**/
-//
-//			// Elem() - seems to work on slice's elements
-//			fieldElem := fieldObj.Type.Elem()
-//			if fieldElem.Kind() == reflect.Struct {
-//				sliceStructure := reflect.Indirect(reflect.New(fieldElem)).Interface()
-//				nestedMapping.Properties = r.CreateElasticObjectConcept(sliceStructure).Properties
-//			} else {
-//				tmpType, err := r.resolveType(fieldElem.Kind().String())
-//				if err != nil {
-//					log.Println(err)
-//				}
-//
-//				nestedMapping.Type = tmpType
-//			}
-//		} else if isAnonymous {
-//			outputMapping.Properties = r.CreateElasticObjectConcept(fieldObj).Properties
-//		}
-//
-//		fieldName := strings.ToLower(structTypeOf.Field(i).Name)
-//		outputMapping.setProperties(fieldName, *nestedMapping)
-//	}
-//	return outputMapping
-//}
 
 func (ElasticMappingFactory) resolveType(input string) (output string, err error) {
 	isInteger := regexp.MustCompile("^u?int\\d{0,2}")

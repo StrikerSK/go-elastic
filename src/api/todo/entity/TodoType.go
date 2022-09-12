@@ -5,6 +5,6 @@ type Todo struct {
 	Time        string   `json:"time"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
-	Tags        []string `json:"tags"`
+	Tags        []string `json:"tags,omitempty"`
 	Done        bool     `json:"done"`
 }
