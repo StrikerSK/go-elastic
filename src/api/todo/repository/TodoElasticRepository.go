@@ -86,8 +86,8 @@ func (r TodoElasticRepository) SearchByStringQuery(stringQuery []string) ([]doma
 	searchResult, err := searchService.
 		//Sort("name", true). // sort by "user" field, ascending
 		//From(0).Size(2). // take documents 0-9
-		Pretty(true). // pretty print request and response JSON
-		Do(r.context) // execute
+		Pretty(true).
+		Do(r.context)
 
 	if err != nil {
 		return nil, err

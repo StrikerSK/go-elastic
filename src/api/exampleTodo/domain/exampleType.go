@@ -1,7 +1,11 @@
 package exampleDomain
 
 type ExampleStruct struct {
-	NestedExampleStruct
+	FirstString  string                `json:"stringValue"`
+	FirstNumber  string                `json:"numberValue"`
+	NestedStruct NestedExampleStruct   `json:"nestedStruct"`
+	NestedSlice  []NestedExampleStruct `json:"nestedSlice"`
+	SliceString  []string              `json:"stringSlice"`
 }
 
 type NestedExampleStruct struct {

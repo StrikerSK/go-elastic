@@ -32,6 +32,7 @@ func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *El
 	for i := 0; i < structValue.NumField(); i++ {
 		fieldObj := structValue.Field(i)
 		fieldKind := fieldObj.Type().Kind()
+		fieldName := strings.ToLower(structValue.Type().Field(i).Name)
 
 		isFieldAnonymous := structTypeOf.Field(i).Anonymous
 		isFieldExported := structTypeOf.Field(i).IsExported()
@@ -75,8 +76,6 @@ func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *El
 			properties := r.CreateElasticObject(fieldObj.Interface())
 			outputMapping.setPropertiesFromMapping(properties)
 		}
-
-		fieldName := strings.ToLower(structValue.Type().Field(i).Name)
 		outputMapping.changeProperties(fieldName, *nestedMapping)
 	}
 	return outputMapping
