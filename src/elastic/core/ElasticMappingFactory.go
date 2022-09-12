@@ -49,11 +49,10 @@ func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *El
 		*/
 		if fieldKind == reflect.Struct {
 			properties := r.CreateElasticObject(fieldObj.Interface())
-			if !isFieldAnonymous {
-				nestedMapping.setPropertiesFromMapping(properties)
-			} else {
+			if isFieldAnonymous {
 				outputMapping.setPropertiesFromMapping(properties)
-				return outputMapping
+			} else {
+				nestedMapping.setPropertiesFromMapping(properties)
 			}
 		} else if fieldKind == reflect.Slice {
 			/**
@@ -77,7 +76,10 @@ func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *El
 				nestedMapping.setType(tmpType)
 			}
 		}
-		outputMapping.changeProperties(fieldName, *nestedMapping)
+
+		if !isFieldAnonymous {
+			outputMapping.changeProperties(fieldName, *nestedMapping)
+		}
 	}
 	return outputMapping
 }

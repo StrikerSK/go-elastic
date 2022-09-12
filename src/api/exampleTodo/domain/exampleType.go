@@ -6,6 +6,7 @@ type ExampleStruct struct {
 	NestedStruct NestedExampleStruct   `json:"nestedStruct"`
 	NestedSlice  []NestedExampleStruct `json:"nestedSlice"`
 	SliceString  []string              `json:"stringSlice"`
+	NestedExampleStruct
 }
 
 type NestedExampleStruct struct {

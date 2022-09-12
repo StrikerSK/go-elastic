@@ -38,7 +38,16 @@ func (m *ElasticMappings) setProperties(properties map[string]ElasticMappings) {
 }
 
 func (m *ElasticMappings) setPropertiesFromMapping(mapping *ElasticMappings) {
-	m.Properties = mapping.Properties
+	tmpMap := make(map[string]ElasticMappings)
+	for key, element := range m.Properties {
+		tmpMap[key] = element
+	}
+
+	for key, element := range mapping.Properties {
+		tmpMap[key] = element
+	}
+
+	m.Properties = tmpMap
 	return
 }
 

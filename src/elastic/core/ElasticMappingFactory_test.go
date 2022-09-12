@@ -94,3 +94,27 @@ func Test_CreateAnonymousField(t *testing.T) {
 	assert.Equal(t, "number", numberProps.Type)
 	assert.Equal(t, 0, len(numberProps.Properties))
 }
+
+func Test_CreateCombinedFields1(t *testing.T) {
+	testStruct := struct {
+		SomeString string
+		NestedStruct
+	}{}
+
+	elasticStructure := elasticMappingFactory.CreateElasticObject(testStruct)
+	assert.NotNil(t, elasticStructure)
+	assert.Equal(t, "", elasticStructure.Type)
+	assert.Equal(t, 3, len(elasticStructure.Properties))
+
+	stringProps := elasticStructure.Properties["nestedstring"]
+	assert.Equal(t, "text", stringProps.Type)
+	assert.Equal(t, 0, len(stringProps.Properties))
+
+	numberProps := elasticStructure.Properties["nestednumber"]
+	assert.Equal(t, "number", numberProps.Type)
+	assert.Equal(t, 0, len(numberProps.Properties))
+
+	structProps := elasticStructure.Properties["somestring"]
+	assert.Equal(t, "text", structProps.Type)
+	assert.Equal(t, 0, len(structProps.Properties))
+}
