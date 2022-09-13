@@ -6,15 +6,16 @@ type ElasticMappings struct {
 	Properties map[string]ElasticMappings `json:"properties,omitempty"`
 }
 
-func NewDefaultMapping(mapSize int) *ElasticMappings {
-	if mapSize == 0 {
-		mapSize = 1
-	}
-
+func NewDefaultMapping() *ElasticMappings {
 	return &ElasticMappings{
 		Type:       "",
-		Properties: make(map[string]ElasticMappings, mapSize),
+		Properties: make(map[string]ElasticMappings),
 	}
+}
+
+func (m *ElasticMappings) WithType(typeName string) *ElasticMappings {
+	m.Type = typeName
+	return m
 }
 
 /*
@@ -32,12 +33,7 @@ func (m *ElasticMappings) setType(typeValue string) {
 	return
 }
 
-func (m *ElasticMappings) setProperties(properties map[string]ElasticMappings) {
-	m.Properties = properties
-	return
-}
-
-func (m *ElasticMappings) setPropertiesFromMapping(mapping *ElasticMappings) {
+func (m *ElasticMappings) setProperties(mapping *ElasticMappings) {
 	tmpMap := make(map[string]ElasticMappings)
 	for key, element := range m.Properties {
 		tmpMap[key] = element
@@ -48,15 +44,6 @@ func (m *ElasticMappings) setPropertiesFromMapping(mapping *ElasticMappings) {
 	}
 
 	m.Properties = tmpMap
-	return
-}
-
-func (m *ElasticMappings) addType(key, value string) {
-	mapping := ElasticMappings{
-		Type: value,
-	}
-
-	m.Properties[key] = mapping
 	return
 }
 

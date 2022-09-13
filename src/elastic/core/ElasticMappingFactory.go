@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"reflect"
 	"regexp"
@@ -21,35 +20,36 @@ nested structs and slices as far as it was tested.
 */
 func (r ElasticMappingFactory) CreateElasticObject(inputStruct interface{}) *ElasticMappings {
 	structValue := reflect.ValueOf(inputStruct)
-	structTypeOf := reflect.TypeOf(inputStruct)
+	structType := reflect.TypeOf(inputStruct)
 
-	outputMapping := NewDefaultMapping(structValue.NumField())
+	outputMapping := NewDefaultMapping()
 	for i := 0; i < structValue.NumField(); i++ {
-		fieldObj := structValue.Field(i)
-		fieldKind := fieldObj.Type().Kind()
-		fieldName := strings.ToLower(structValue.Type().Field(i).Name)
+		fieldObject := structValue.Field(i)
+		fieldObjectKind := fieldObject.Type().Kind()
+		fieldObjectName := strings.ToLower(structValue.Type().Field(i).Name)
 
-		isFieldAnonymous := structTypeOf.Field(i).Anonymous
+		isFieldAnonymous := structType.Field(i).Anonymous
 
-		fieldType, err := r.resolveType(fieldKind.String())
+		fieldType, err := r.resolveType(fieldObjectKind.String())
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 
-		nestedMapping := NewDefaultMapping(0)
-		nestedMapping.setType(fieldType)
+		nestedMapping := NewDefaultMapping().WithType(fieldType)
 
 		/*
 			In case of 'struct' type, we need to call recursion to resolve nested structure
 		*/
-		if fieldKind == reflect.Struct {
-			structProperties := r.CreateElasticObject(fieldObj.Interface())
+
+		switch fieldObjectKind {
+		case reflect.Struct:
+			structInterface := fieldObject.Interface()
 			if isFieldAnonymous {
-				outputMapping.setPropertiesFromMapping(structProperties)
+				r.mapStructType(outputMapping, structInterface)
 			} else {
-				nestedMapping.setPropertiesFromMapping(structProperties)
+				r.mapStructType(nestedMapping, structInterface)
 			}
-		} else if fieldKind == reflect.Slice {
+		case reflect.Slice:
 			/**
 			To resolve slice field we need to find element type of element represented by `fieldObj.Type().Elem()`.
 			Then we need to create new value of this type Calling `reflect.New`. Be aware that this structure will be pointer
@@ -57,43 +57,51 @@ func (r ElasticMappingFactory) CreateElasticObject(inputStruct interface{}) *Ela
 			**/
 
 			// Elem() - seems to work on slice's elements
-			sliceElem := fieldObj.Type().Elem()
+			sliceElem := fieldObject.Type().Elem()
 			if sliceElem.Kind() == reflect.Struct {
-				sliceStruct := reflect.Indirect(reflect.New(sliceElem)).Interface()
-				sliceProperties := r.CreateElasticObject(sliceStruct)
-				nestedMapping.setPropertiesFromMapping(sliceProperties)
+				sliceStruct := r.mapPointerType(fieldObject)
+				r.mapStructType(nestedMapping, sliceStruct)
 			} else {
-				sliceType, err := r.resolveType(sliceElem.Kind().String())
-				if err != nil {
-					log.Println(err)
-				}
-
-				nestedMapping.setType(sliceType)
+				r.mapStandardType(nestedMapping, sliceElem.Kind())
 			}
-		} else if fieldKind == reflect.Pointer {
-			pointerValue := reflect.New(fieldObj.Type().Elem())
-			pointerObject := reflect.Indirect(pointerValue).Interface()
-
-			if reflect.TypeOf(pointerObject).Kind() == reflect.Struct {
-				pointerProperties := r.CreateElasticObject(pointerObject)
-				outputMapping.setPropertiesFromMapping(pointerProperties)
+		case reflect.Pointer:
+			pointerObject := r.mapPointerType(fieldObject)
+			pointerObjectKind := reflect.TypeOf(pointerObject).Kind()
+			if pointerObjectKind == reflect.Struct {
+				r.mapStructType(outputMapping, pointerObject)
 			} else {
-				kindValue := reflect.TypeOf(pointerObject).Kind().String()
-				sliceType, err := r.resolveType(kindValue)
-				if err != nil {
-					log.Println(err)
-				}
-
-				nestedMapping.setType(sliceType)
+				r.mapStandardType(nestedMapping, pointerObjectKind)
 			}
-
 		}
 
 		if !isFieldAnonymous {
-			outputMapping.changeProperties(fieldName, *nestedMapping)
+			outputMapping.changeProperties(fieldObjectName, *nestedMapping)
 		}
 	}
 	return outputMapping
+}
+
+// mapStandardType - Add mapping of standard type of checked field
+func (r ElasticMappingFactory) mapStandardType(mapper *ElasticMappings, kind reflect.Kind) {
+	sliceType, err := r.resolveType(kind.String())
+	if err != nil {
+		log.Println(err)
+	}
+
+	mapper.setType(sliceType)
+}
+
+// mapStructType - Add mapping of struct type of checked field
+func (r ElasticMappingFactory) mapStructType(mapper *ElasticMappings, inputStruct interface{}) {
+	pointerProperties := r.CreateElasticObject(inputStruct)
+	mapper.setProperties(pointerProperties)
+}
+
+// mapPointerType - Resolves pointer field type of struct to regular struct
+func (r ElasticMappingFactory) mapPointerType(inputStruct reflect.Value) interface{} {
+	pointerElem := inputStruct.Type().Elem()
+	pointerValue := reflect.New(pointerElem)
+	return reflect.Indirect(pointerValue).Interface()
 }
 
 func (ElasticMappingFactory) resolveType(input string) (output string, err error) {
