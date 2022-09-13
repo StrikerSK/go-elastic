@@ -19,9 +19,9 @@ func NewElasticMappingFactory() ElasticMappingFactory {
 CreateElasticObject - Generating of ElasticSearch's simple index model to create. Normally this should work with
 nested structs and slices as far as it was tested.
 */
-func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *ElasticMappings {
-	structValue := reflect.ValueOf(customStruct)
-	structTypeOf := reflect.TypeOf(customStruct)
+func (r ElasticMappingFactory) CreateElasticObject(inputStruct interface{}) *ElasticMappings {
+	structValue := reflect.ValueOf(inputStruct)
+	structTypeOf := reflect.TypeOf(inputStruct)
 
 	outputMapping := NewDefaultMapping(structValue.NumField())
 	for i := 0; i < structValue.NumField(); i++ {
@@ -43,11 +43,11 @@ func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *El
 			In case of 'struct' type, we need to call recursion to resolve nested structure
 		*/
 		if fieldKind == reflect.Struct {
-			properties := r.CreateElasticObject(fieldObj.Interface())
+			structProperties := r.CreateElasticObject(fieldObj.Interface())
 			if isFieldAnonymous {
-				outputMapping.setPropertiesFromMapping(properties)
+				outputMapping.setPropertiesFromMapping(structProperties)
 			} else {
-				nestedMapping.setPropertiesFromMapping(properties)
+				nestedMapping.setPropertiesFromMapping(structProperties)
 			}
 		} else if fieldKind == reflect.Slice {
 			/**
@@ -57,19 +57,36 @@ func (r ElasticMappingFactory) CreateElasticObject(customStruct interface{}) *El
 			**/
 
 			// Elem() - seems to work on slice's elements
-			fieldElem := fieldObj.Type().Elem()
-			if fieldElem.Kind() == reflect.Struct {
-				sliceStructure := reflect.Indirect(reflect.New(fieldElem)).Interface()
-				properties := r.CreateElasticObject(sliceStructure)
-				nestedMapping.setPropertiesFromMapping(properties)
+			sliceElem := fieldObj.Type().Elem()
+			if sliceElem.Kind() == reflect.Struct {
+				sliceStruct := reflect.Indirect(reflect.New(sliceElem)).Interface()
+				sliceProperties := r.CreateElasticObject(sliceStruct)
+				nestedMapping.setPropertiesFromMapping(sliceProperties)
 			} else {
-				tmpType, err := r.resolveType(fieldElem.Kind().String())
+				sliceType, err := r.resolveType(sliceElem.Kind().String())
 				if err != nil {
 					log.Println(err)
 				}
 
-				nestedMapping.setType(tmpType)
+				nestedMapping.setType(sliceType)
 			}
+		} else if fieldKind == reflect.Pointer {
+			pointerValue := reflect.New(fieldObj.Type().Elem())
+			pointerObject := reflect.Indirect(pointerValue).Interface()
+
+			if reflect.TypeOf(pointerObject).Kind() == reflect.Struct {
+				pointerProperties := r.CreateElasticObject(pointerObject)
+				outputMapping.setPropertiesFromMapping(pointerProperties)
+			} else {
+				kindValue := reflect.TypeOf(pointerObject).Kind().String()
+				sliceType, err := r.resolveType(kindValue)
+				if err != nil {
+					log.Println(err)
+				}
+
+				nestedMapping.setType(sliceType)
+			}
+
 		}
 
 		if !isFieldAnonymous {
