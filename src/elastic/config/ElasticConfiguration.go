@@ -3,7 +3,7 @@ package elasticConfig
 import (
 	"context"
 	"github.com/olivere/elastic/v7"
-	"github.com/strikersk/go-elastic/src/elastic/core"
+	elasticIndex "github.com/strikersk/go-elastic/src/elastic/core/index"
 	"log"
 	"os"
 	"time"
@@ -12,10 +12,10 @@ import (
 type ElasticConfiguration struct {
 	ElasticClient *elastic.Client
 	Context       context.Context
-	IndexBuilder  core.ElasticIndexBuilder
+	IndexBuilder  elasticIndex.ElasticIndexBuilder
 }
 
-func NewElasticConfiguration(indexBuilder core.ElasticIndexBuilder) ElasticConfiguration {
+func NewElasticConfiguration(indexBuilder elasticIndex.ElasticIndexBuilder) ElasticConfiguration {
 	log.Println("ElasticSearch initialization")
 
 	elasticUrl := os.Getenv("ELASTIC_URL")

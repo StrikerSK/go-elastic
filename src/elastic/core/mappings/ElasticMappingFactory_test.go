@@ -1,4 +1,4 @@
-package core
+package mappings
 
 import (
 	"github.com/stretchr/testify/assert"

@@ -1,4 +1,4 @@
-package core
+package mappings
 
 // ElasticMappings - structure mapping all structure field name and type
 type ElasticMappings struct {

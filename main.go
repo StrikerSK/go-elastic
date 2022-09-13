@@ -8,7 +8,8 @@ import (
 	todoController "github.com/strikersk/go-elastic/src/api/todo/controller"
 	todoRepository "github.com/strikersk/go-elastic/src/api/todo/repository"
 	elasticConfig "github.com/strikersk/go-elastic/src/elastic/config"
-	elasticCore "github.com/strikersk/go-elastic/src/elastic/core"
+	elasticIndex "github.com/strikersk/go-elastic/src/elastic/core/index"
+	elasticMappings "github.com/strikersk/go-elastic/src/elastic/core/mappings"
 	"log"
 	"os"
 )
@@ -18,8 +19,8 @@ func main() {
 		StrictRouting: false,
 	})
 
-	mappingFactory := elasticCore.NewElasticMappingFactory()
-	indexBuilder := elasticCore.NewElasticIndexBuilder(mappingFactory)
+	mappingFactory := elasticMappings.NewElasticMappingFactory()
+	indexBuilder := elasticIndex.NewElasticIndexBuilder(mappingFactory)
 	elasticConfiguration := elasticConfig.NewElasticConfiguration(indexBuilder)
 
 	exSrv := exampleService.NewExampleTodoService(indexBuilder)
