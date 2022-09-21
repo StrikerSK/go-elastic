@@ -1,12 +1,8 @@
 package exampleService
 
 import (
-	"fmt"
-	"github.com/google/uuid"
 	exampleDomain "github.com/strikersk/go-elastic/src/api/exampleTodo/domain"
-	todoDomain "github.com/strikersk/go-elastic/src/api/todo/domain"
 	elasticIndex "github.com/strikersk/go-elastic/src/elastic/core/index"
-	"time"
 )
 
 type ExampleTodoService struct {
@@ -19,15 +15,24 @@ func NewExampleTodoService(indexBuilder elasticIndex.ElasticIndexBuilder) Exampl
 	}
 }
 
-func (ExampleTodoService) GenerateExampleTodo() todoDomain.Todo {
-	tmpString := "Example Create Todo"
-	return todoDomain.Todo{
-		ID:          uuid.New().String(),
-		Time:        fmt.Sprintf("%d", time.Now().Unix()),
-		Name:        tmpString,
-		Description: "Example Create Todo",
-		Tags:        []string{"test", "testing", "qa"},
-		Done:        false,
+func (ExampleTodoService) GenerateExampleStruct() exampleDomain.ExampleStruct {
+	stringField := "String field"
+	nestedStruct := exampleDomain.NestedExampleStruct{
+		NestedString: "Nested string",
+		NestedNumber: 999999999,
+		NestedFloat:  0.123456789,
+	}
+
+	return exampleDomain.ExampleStruct{
+		FieldNumber:         123456789,
+		StringField:         stringField,
+		NestedStruct:        nestedStruct,
+		StringSlice:         []string{"test", "testing", "qa"},
+		NestedStructSlice:   []exampleDomain.NestedExampleStruct{nestedStruct, nestedStruct},
+		StringPointer:       &stringField,
+		StringSlicePointer:  []*string{&stringField, &stringField},
+		PointerStructSlice:  []*exampleDomain.NestedExampleStruct{&nestedStruct, &nestedStruct},
+		NestedExampleStruct: nestedStruct,
 	}
 }
 

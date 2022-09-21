@@ -15,8 +15,14 @@ func NewExampleTodoHandler(service exampleService.ExampleTodoService) ExampleTod
 	}
 }
 
-func (h ExampleTodoHandler) CreateExampleTodo(ctx *fiber.Ctx) error {
-	return ctx.JSON(h.service.GenerateExampleTodo())
+func (h ExampleTodoHandler) EnrichHandler(api fiber.Router) {
+	examplePath := api.Group("/examples")
+	examplePath.Get("/index", h.CreateExampleIndex)
+	examplePath.Get("/type", h.CreateExampleStruct)
+}
+
+func (h ExampleTodoHandler) CreateExampleStruct(ctx *fiber.Ctx) error {
+	return ctx.JSON(h.service.GenerateExampleStruct())
 }
 
 func (h ExampleTodoHandler) CreateExampleIndex(ctx *fiber.Ctx) error {

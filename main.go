@@ -24,20 +24,17 @@ func main() {
 	indexBuilder := elasticIndex.NewElasticIndexBuilder(mappingFactory)
 	elasticConfiguration := elasticConfig.NewElasticConfiguration(indexBuilder)
 
-	exSrv := exampleService.NewExampleTodoService(indexBuilder)
-	exHdl := exampleHandler.NewExampleTodoHandler(exSrv)
-
-	apiPath := app.Group("/api")
-
-	examplePath := apiPath.Group("/examples")
-	examplePath.Get("/index", exHdl.CreateExampleIndex)
-	examplePath.Get("/type", exHdl.CreateExampleTodo)
+	appExampleServer := exampleService.NewExampleTodoService(indexBuilder)
+	appExampleHandler := exampleHandler.NewExampleTodoHandler(appExampleServer)
 
 	elasticTodoRepository := todoRepository.NewElasticRepository(elasticConfiguration)
 	elasticTodoService := elasticService.NewTodoElasticService(elasticTodoRepository)
 	elasticTodoHandler := todoController.NewTodoHandler(elasticTodoService)
 
+	apiPath := app.Group("/api")
+	appExampleHandler.EnrichHandler(apiPath)
 	elasticTodoHandler.EnrichRouter(apiPath)
+
 	log.Fatal(app.Listen(resolvePort()))
 }
 
