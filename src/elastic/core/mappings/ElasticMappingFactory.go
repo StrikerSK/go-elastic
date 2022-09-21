@@ -59,14 +59,22 @@ func (r ElasticMappingFactory) CreateElasticObject(inputStruct interface{}) *Ela
 			// Elem() - seems to work on slice's elements
 			sliceElem := fieldObject.Type().Elem()
 			if sliceElem.Kind() == reflect.Struct {
-				sliceStruct := r.mapPointerType(fieldObject)
+				sliceStruct := r.getPointerStruct(fieldObject)
 				r.mapStructType(nestedMapping, sliceStruct)
+			} else if sliceElem.Kind() == reflect.Pointer {
+				pointerValue := r.getPointerStructValue(fieldObject)
+				pointerObject, pointerObjectKind := r.getPointerStructAndKind(pointerValue)
+				if pointerObjectKind == reflect.Struct {
+					r.mapStructType(nestedMapping, pointerObject)
+					nestedMapping.Type = "slice"
+				} else {
+					r.mapStandardType(nestedMapping, pointerObjectKind)
+				}
 			} else {
 				r.mapStandardType(nestedMapping, sliceElem.Kind())
 			}
 		case reflect.Pointer:
-			pointerObject := r.mapPointerType(fieldObject)
-			pointerObjectKind := reflect.TypeOf(pointerObject).Kind()
+			pointerObject, pointerObjectKind := r.getPointerStructAndKind(fieldObject)
 			if pointerObjectKind == reflect.Struct {
 				r.mapStructType(outputMapping, pointerObject)
 			} else {
@@ -97,11 +105,21 @@ func (r ElasticMappingFactory) mapStructType(mapper *ElasticMappings, inputStruc
 	mapper.setProperties(pointerProperties)
 }
 
-// mapPointerType - Resolves pointer field type of struct to regular struct
-func (r ElasticMappingFactory) mapPointerType(inputStruct reflect.Value) interface{} {
+// getPointerStruct - Resolves pointer field type of struct to regular struct
+func (r ElasticMappingFactory) getPointerStruct(inputStruct reflect.Value) interface{} {
 	pointerElem := inputStruct.Type().Elem()
 	pointerValue := reflect.New(pointerElem)
 	return reflect.Indirect(pointerValue).Interface()
+}
+
+func (r ElasticMappingFactory) getPointerStructValue(inputStruct reflect.Value) reflect.Value {
+	return reflect.ValueOf(r.getPointerStruct(inputStruct))
+}
+
+func (r ElasticMappingFactory) getPointerStructAndKind(inputStruct reflect.Value) (interface{}, reflect.Kind) {
+	pointerObject := r.getPointerStruct(inputStruct)
+	pointerObjectKind := reflect.TypeOf(pointerObject).Kind()
+	return pointerObject, pointerObjectKind
 }
 
 func (ElasticMappingFactory) resolveType(input string) (output string, err error) {

@@ -121,6 +121,37 @@ func Test_CreateSimplePointerField(t *testing.T) {
 	assert.Empty(t, stringProps.Properties)
 }
 
+func Test_CreateSlicePointerField(t *testing.T) {
+	testStruct := struct {
+		PointerStringSlice []*string
+	}{}
+
+	elasticStructure := elasticMappingFactory.CreateElasticObject(testStruct)
+	stringProps := elasticStructure.Properties["pointerstringslice"]
+	assert.Equal(t, "text", stringProps.Type)
+	assert.Empty(t, stringProps.Properties)
+}
+
+func Test_CreateSliceStructPointerField(t *testing.T) {
+	testStruct := struct {
+		PointerStructSlice []*NestedStruct
+	}{}
+
+	elasticStructure := elasticMappingFactory.CreateElasticObject(testStruct)
+	field := elasticStructure.Properties["pointerstructslice"]
+	assert.NotNil(t, field)
+	assert.Equal(t, "slice", field.Type)
+	assert.Equal(t, 2, len(field.Properties))
+
+	stringProps := field.Properties["nestedstring"]
+	assert.Equal(t, "text", stringProps.Type)
+	assert.Empty(t, stringProps.Properties)
+
+	numberProps := field.Properties["nestednumber"]
+	assert.Equal(t, "number", numberProps.Type)
+	assert.Empty(t, numberProps.Properties)
+}
+
 func Test_CreateCombinedFields1(t *testing.T) {
 	testStruct := struct {
 		SomeString    string

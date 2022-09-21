@@ -1,16 +1,17 @@
 package exampleDomain
 
 type ExampleStruct struct {
-	FirstString  string                `json:"stringValue"`
-	FirstNumber  string                `json:"numberValue"`
-	NestedStruct NestedExampleStruct   `json:"nestedStruct"`
-	NestedSlice  []NestedExampleStruct `json:"nestedSlice"`
-	SliceString  []string              `json:"stringSlice"`
+	StringField       string                `json:"stringValue"`
+	FieldNumber       int                   `json:"numberValue"`
+	NestedStruct      NestedExampleStruct   `json:"nestedStruct"`
+	NestedStructSlice []NestedExampleStruct `json:"nestedSlice"`
+	StringSlice       []string              `json:"stringSlice"`
+	StringPointer     *string               `json:"stringPointer"`
 	NestedExampleStruct
 }
 
 type NestedExampleStruct struct {
 	NestedString string  `json:"nestedString"`
-	NestedInt    int64   `json:"nestedNumber"`
+	NestedNumber int64   `json:"nestedNumber"`
 	NestedFloat  float32 `json:"nestedFloat"`
 }
