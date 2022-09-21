@@ -9,7 +9,7 @@ type ElasticMappings struct {
 func NewDefaultMapping() *ElasticMappings {
 	return &ElasticMappings{
 		Type:       "",
-		Properties: make(map[string]ElasticMappings),
+		Properties: make(map[string]ElasticMappings, 0),
 	}
 }
 
@@ -34,7 +34,7 @@ func (m *ElasticMappings) setType(typeValue string) {
 }
 
 func (m *ElasticMappings) setProperties(mapping *ElasticMappings) {
-	tmpMap := make(map[string]ElasticMappings)
+	tmpMap := make(map[string]ElasticMappings, 0)
 	for key, element := range m.Properties {
 		tmpMap[key] = element
 	}

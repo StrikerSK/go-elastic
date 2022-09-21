@@ -65,8 +65,7 @@ func (r ElasticMappingFactory) CreateElasticObject(inputStruct interface{}) *Ela
 				pointerValue := r.getPointerStructValue(fieldObject)
 				pointerObject, pointerObjectKind := r.getPointerStructAndKind(pointerValue)
 				if pointerObjectKind == reflect.Struct {
-					r.mapStructType(nestedMapping, pointerObject)
-					nestedMapping.Type = "slice"
+					r.mapStructType(nestedMapping.WithType("slice"), pointerObject)
 				} else {
 					r.mapStandardType(nestedMapping, pointerObjectKind)
 				}

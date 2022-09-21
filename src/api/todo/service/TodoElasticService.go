@@ -41,6 +41,6 @@ func (s TodoElasticService) DeleteTodo(id string) error {
 	return s.repository.DeleteDocument(id)
 }
 
-func (s TodoElasticService) SearchTodos(queries []string) ([]todoDomain.Todo, error) {
-	return s.repository.SearchTodos(queries)
+func (s TodoElasticService) SearchTodos(query string) ([]todoDomain.Todo, error) {
+	return s.repository.SearchTodos(query)
 }

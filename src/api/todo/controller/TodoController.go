@@ -92,7 +92,7 @@ func (h TodoHandler) updateTodo(ctx *fiber.Ctx) error {
 
 func (h TodoHandler) searchTodo(ctx *fiber.Ctx) error {
 	query := struct {
-		Query []string `query:"query"`
+		Query string `query:"query"`
 	}{}
 
 	_ = ctx.QueryParser(&query)

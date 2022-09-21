@@ -83,15 +83,10 @@ func (r TodoElasticRepository) FindTodo(documentID string) (output todoDomain.To
 	return
 }
 
-func (r TodoElasticRepository) SearchTodos(stringQuery []string) ([]todoDomain.Todo, error) {
+func (r TodoElasticRepository) SearchTodos(stringQuery string) ([]todoDomain.Todo, error) {
 	output := make([]todoDomain.Todo, 0)
 
-	searchService := r.client.Search().Index(r.indexName) // search in index "todos"
-
-	for _, query := range stringQuery {
-		searchService = searchService.Query(elastic.NewQueryStringQuery(query))
-	}
-
+	searchService := r.client.Search().Index(r.indexName).Query(elastic.NewQueryStringQuery(stringQuery))
 	searchResult, err := searchService.
 		//Sort("name", true). // sort by "user" field, ascending
 		//From(0).Size(2). // take documents 0-9
