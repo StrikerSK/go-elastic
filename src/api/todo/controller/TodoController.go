@@ -2,21 +2,18 @@ package controller
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
-	"github.com/strikersk/go-elastic/src/api/todo/entity"
-	"github.com/strikersk/go-elastic/src/api/todo/ports"
+	todoDomain "github.com/strikersk/go-elastic/src/api/todo/domain"
+	todoPorts "github.com/strikersk/go-elastic/src/api/todo/ports"
 	"log"
 	"net/http"
-	"time"
 )
 
 type TodoHandler struct {
-	service ports.ITodoRepository
+	service todoPorts.ITodoService
 }
 
-func NewTodoHandler(service ports.ITodoRepository) TodoHandler {
+func NewTodoHandler(service todoPorts.ITodoService) TodoHandler {
 	return TodoHandler{
 		service: service,
 	}
@@ -37,10 +34,7 @@ func (h TodoHandler) createTodo(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	todo.ID = uuid.New().String()
-	todo.Time = fmt.Sprintf("%d", time.Now().Unix())
-
-	responseId, err := h.service.InsertDocument("", todo)
+	responseId, err := h.service.CreateTodo(todo)
 	if err != nil {
 		log.Printf("Repository error: %v\n", err)
 		return fiber.NewError(http.StatusBadRequest, err.Error())
@@ -56,7 +50,7 @@ func (h TodoHandler) readTodo(ctx *fiber.Ctx) error {
 		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	todo, err := h.service.SearchByID(documentID)
+	todo, err := h.service.FindTodo(documentID)
 	if err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(map[string]string{"data": err.Error()})
 	}
@@ -70,7 +64,7 @@ func (h TodoHandler) deleteTodo(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	if err = h.service.DeleteDocument(documentID); err != nil {
+	if err = h.service.DeleteTodo(documentID); err != nil {
 		log.Printf("Delete error: %v\n", err)
 	}
 
@@ -88,8 +82,7 @@ func (h TodoHandler) updateTodo(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	_, err = h.service.InsertDocument(documentID, todo)
-	if err != nil {
+	if err = h.service.UpdateTodo(documentID, todo); err != nil {
 		log.Printf("Repository error: %v\n", err)
 		return err
 	}
@@ -103,7 +96,7 @@ func (h TodoHandler) searchTodo(ctx *fiber.Ctx) error {
 	}{}
 
 	_ = ctx.QueryParser(&query)
-	todos, _ := h.service.SearchByStringQuery(query.Query)
+	todos, _ := h.service.SearchTodos(query.Query)
 	return ctx.JSON(todos)
 }
 
@@ -115,11 +108,11 @@ func (h TodoHandler) extractParam(ctx *fiber.Ctx, param string) (string, error) 
 	return documentID, nil
 }
 
-func (h TodoHandler) extractBody(ctx *fiber.Ctx) (domain.Todo, error) {
-	var todo domain.Todo
+func (h TodoHandler) extractBody(ctx *fiber.Ctx) (todoDomain.Todo, error) {
+	var todo todoDomain.Todo
 	if err := ctx.BodyParser(&todo); err != nil {
 		log.Printf("Body parsing error: %v\n", err)
-		return domain.Todo{}, err
+		return todoDomain.Todo{}, err
 	}
 
 	return todo, nil

@@ -1,12 +1,14 @@
 package exampleDomain
 
 type ExampleStruct struct {
-	StringField       string                `json:"stringValue"`
-	FieldNumber       int                   `json:"numberValue"`
-	NestedStruct      NestedExampleStruct   `json:"nestedStruct"`
-	NestedStructSlice []NestedExampleStruct `json:"nestedSlice"`
-	StringSlice       []string              `json:"stringSlice"`
-	StringPointer     *string               `json:"stringPointer"`
+	FieldNumber        int                    `json:"numberValue"`
+	StringField        string                 `json:"stringValue"`
+	NestedStruct       NestedExampleStruct    `json:"nestedStruct"`
+	StringSlice        []string               `json:"stringSlice"`
+	NestedStructSlice  []NestedExampleStruct  `json:"nestedSlice"`
+	StringPointer      *string                `json:"stringPointer"`
+	StringSlicePointer []*string              `json:"stringSlicePointer"`
+	PointerStructSlice []*NestedExampleStruct `json:"pointerStructSlice"`
 	NestedExampleStruct
 }
 

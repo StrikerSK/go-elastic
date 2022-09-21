@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	exampleDomain "github.com/strikersk/go-elastic/src/api/exampleTodo/domain"
-	todoDomain "github.com/strikersk/go-elastic/src/api/todo/entity"
+	todoDomain "github.com/strikersk/go-elastic/src/api/todo/domain"
 	elasticIndex "github.com/strikersk/go-elastic/src/elastic/core/index"
 	"time"
 )

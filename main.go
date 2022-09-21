@@ -7,6 +7,7 @@ import (
 	exampleService "github.com/strikersk/go-elastic/src/api/exampleTodo/service"
 	todoController "github.com/strikersk/go-elastic/src/api/todo/controller"
 	todoRepository "github.com/strikersk/go-elastic/src/api/todo/repository"
+	elasticService "github.com/strikersk/go-elastic/src/api/todo/service"
 	elasticConfig "github.com/strikersk/go-elastic/src/elastic/config"
 	elasticIndex "github.com/strikersk/go-elastic/src/elastic/core/index"
 	elasticMappings "github.com/strikersk/go-elastic/src/elastic/core/mappings"
@@ -32,10 +33,11 @@ func main() {
 	examplePath.Get("/index", exHdl.CreateExampleIndex)
 	examplePath.Get("/type", exHdl.CreateExampleTodo)
 
-	elasticRepo := todoRepository.NewElasticRepository(elasticConfiguration)
-	handler := todoController.NewTodoHandler(elasticRepo)
+	elasticTodoRepository := todoRepository.NewElasticRepository(elasticConfiguration)
+	elasticTodoService := elasticService.NewTodoElasticService(elasticTodoRepository)
+	elasticTodoHandler := todoController.NewTodoHandler(elasticTodoService)
 
-	handler.EnrichRouter(apiPath)
+	elasticTodoHandler.EnrichRouter(apiPath)
 	log.Fatal(app.Listen(resolvePort()))
 }
 
