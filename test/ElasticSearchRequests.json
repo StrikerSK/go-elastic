@@ -18,8 +18,7 @@
 									"listen": "test",
 									"script": {
 										"exec": [
-											"const id = pm.response.json().data.id;",
-											"pm.collectionVariables.set(\"DOCUMENT_ID\", id);"
+											"pm.collectionVariables.set(\"DOCUMENT_ID\", pm.response.json().id);"
 										],
 										"type": "text/javascript"
 									}
@@ -30,7 +29,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n\t\"person\": {\n\t\t\"firstName\": \"Karel\",\n\t\t\"lastName\": \"Tester\"\n\t},\n    \"done\": false\n}",
+									"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -68,7 +67,32 @@
 							"response": []
 						},
 						{
-							"name": "UPDATE Todo",
+							"name": "SEARCH Todo",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HOST_URL}}/todo/search?query=create",
+									"host": [
+										"{{HOST_URL}}"
+									],
+									"path": [
+										"todo",
+										"search"
+									],
+									"query": [
+										{
+											"key": "query",
+											"value": "create",
+											"description": " "
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UDPATE Todo",
 							"event": [
 								{
 									"listen": "test",
@@ -85,7 +109,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"name\": \"Updated Todo\",\n    \"description\": \"I should update todo\",\n    \"done\": false\n}",
+									"raw": "{\n\t\"id\": \"ece7fd05-eba8-407e-a358-dc3bcd87f5f6\",\n\t\"time\": \"1648241583\",\n    \"name\": \"Updated Todo\",\n    \"description\": \"I should update todo\",\n    \"done\": false\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -123,7 +147,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"name\": \"Create Todo\",\n    \"description\": \"I have to create todo\",\n    \"done\": false\n}",
+									"raw": "",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -473,12 +497,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{HOST_URL}}/example/type",
+					"raw": "{{HOST_URL}}/api/examples/type",
 					"host": [
 						"{{HOST_URL}}"
 					],
 					"path": [
-						"example",
+						"api",
+						"examples",
 						"type"
 					]
 				}

@@ -1,44 +1,50 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/strikersk/go-elastic/src/api/exampleType"
-	"github.com/strikersk/go-elastic/src/api/todo"
-	"github.com/strikersk/go-elastic/src/elastic"
+	"fmt"
+	"github.com/gofiber/fiber/v2"
+	exampleHandler "github.com/strikersk/go-elastic/src/api/exampleTodo/handler"
+	exampleService "github.com/strikersk/go-elastic/src/api/exampleTodo/service"
+	todoController "github.com/strikersk/go-elastic/src/api/todo/controller"
+	todoRepository "github.com/strikersk/go-elastic/src/api/todo/repository"
+	elasticService "github.com/strikersk/go-elastic/src/api/todo/service"
+	elasticConfig "github.com/strikersk/go-elastic/src/elastic/config"
+	elasticIndex "github.com/strikersk/go-elastic/src/elastic/core/index"
+	elasticMappings "github.com/strikersk/go-elastic/src/elastic/core/mappings"
 	"log"
-	"net/http"
 	"os"
 )
 
-func init() {
-	elastic.GetElasticInstance().InitializeIndex(todo.TodosIndex, todo.CreateTodoIndexBody())
-}
-
 func main() {
-	router := mux.NewRouter().StrictSlash(true)
-	todo.EnrichRouter(router)
-	exampleType.EnrichRouterWithExamples(router)
+	app := fiber.New(fiber.Config{
+		StrictRouting: false,
+	})
 
-	log.Println("Listening")
-	log.Println(http.ListenAndServe(":"+resolvePort(), router))
-}
+	mappingFactory := elasticMappings.NewElasticMappingFactory()
+	indexBuilder := elasticIndex.NewElasticIndexBuilder(mappingFactory)
+	elasticConfiguration := elasticConfig.NewElasticConfiguration(indexBuilder)
 
-func createServer() *http.Server {
-	router := mux.NewRouter().StrictSlash(true)
-	todo.EnrichRouter(router)
-	exampleType.EnrichRouterWithExamples(router)
+	appExampleServer := exampleService.NewExampleTodoService(indexBuilder)
+	appExampleHandler := exampleHandler.NewExampleTodoHandler(appExampleServer)
 
-	return &http.Server{
-		Addr:    resolvePort(),
-		Handler: router,
-	}
+	elasticTodoRepository := todoRepository.NewElasticRepository(elasticConfiguration)
+	elasticTodoService := elasticService.NewTodoElasticService(elasticTodoRepository)
+	elasticTodoHandler := todoController.NewTodoHandler(elasticTodoService)
+
+	apiPath := app.Group("/api")
+	appExampleHandler.EnrichHandler(apiPath)
+	elasticTodoHandler.EnrichRouter(apiPath)
+
+	log.Fatal(app.Listen(resolvePort()))
 }
 
 func resolvePort() (port string) {
 	port = os.Getenv("PORT")
+
 	if port == "" {
-		log.Printf("Cannot retrieve port number using default value\n")
-		port = "5000"
+		log.Printf("Default PORT value used\n")
+		port = "4000"
 	}
-	return
+
+	return fmt.Sprintf(":%s", port)
 }
