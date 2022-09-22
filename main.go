@@ -3,43 +3,48 @@ package main
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/strikersk/go-elastic/src/api/exampleType"
-	"github.com/strikersk/go-elastic/src/api/todo/controller"
-	"github.com/strikersk/go-elastic/src/elastic"
+	exampleHandler "github.com/strikersk/go-elastic/src/api/exampleTodo/handler"
+	exampleService "github.com/strikersk/go-elastic/src/api/exampleTodo/service"
+	todoController "github.com/strikersk/go-elastic/src/api/todo/controller"
+	todoRepository "github.com/strikersk/go-elastic/src/api/todo/repository"
+	elasticService "github.com/strikersk/go-elastic/src/api/todo/service"
+	elasticConfig "github.com/strikersk/go-elastic/src/elastic/config"
+	elasticIndex "github.com/strikersk/go-elastic/src/elastic/core/index"
+	elasticMappings "github.com/strikersk/go-elastic/src/elastic/core/mappings"
 	"log"
 	"os"
 )
-
-func init() {
-	elastic.GetElasticInstance()
-}
 
 func main() {
 	app := fiber.New(fiber.Config{
 		StrictRouting: false,
 	})
 
+	mappingFactory := elasticMappings.NewElasticMappingFactory()
+	indexBuilder := elasticIndex.NewElasticIndexBuilder(mappingFactory)
+	elasticConfiguration := elasticConfig.NewElasticConfiguration(indexBuilder)
+
+	appExampleServer := exampleService.NewExampleTodoService(indexBuilder)
+	appExampleHandler := exampleHandler.NewExampleTodoHandler(appExampleServer)
+
+	elasticTodoRepository := todoRepository.NewElasticRepository(elasticConfiguration)
+	elasticTodoService := elasticService.NewTodoElasticService(elasticTodoRepository)
+	elasticTodoHandler := todoController.NewTodoHandler(elasticTodoService)
+
 	apiPath := app.Group("/api")
+	appExampleHandler.EnrichHandler(apiPath)
+	elasticTodoHandler.EnrichRouter(apiPath)
 
-	examplePath := apiPath.Group("/examples")
-	examplePath.Get("/index", exampleType.CreateExampleType)
-	examplePath.Get("/type", exampleType.CreateExampleIndexBody)
-
-	todoPath := app.Group("/todo")
-	todoPath.Post("", controller.CreateTodo)
-	todoPath.Put("/:id", controller.UpdateTodo)
-	todoPath.Delete("/:id", controller.DeleteTodo)
-	todoPath.Get("/search", controller.SearchTodo)
-	todoPath.Get("/:id", controller.ReadTodo)
-
-	log.Fatal(app.Listen(fmt.Sprintf(":%s", resolvePort())))
+	log.Fatal(app.Listen(resolvePort()))
 }
 
 func resolvePort() (port string) {
 	port = os.Getenv("PORT")
+
 	if port == "" {
 		log.Printf("Default PORT value used\n")
-		port = "5000"
+		port = "4000"
 	}
-	return
+
+	return fmt.Sprintf(":%s", port)
 }
