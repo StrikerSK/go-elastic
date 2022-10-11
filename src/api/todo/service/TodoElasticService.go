@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/uuid"
 	todoDomain "github.com/strikersk/go-elastic/src/api/todo/domain"
@@ -18,29 +19,31 @@ func NewTodoElasticService(repository todoPorts.ITodoRepository) TodoElasticServ
 	}
 }
 
-func (s TodoElasticService) FindTodo(id string) (todoDomain.Todo, error) {
-	return s.repository.FindTodo(id)
+func (s TodoElasticService) FindTodo(ctx context.Context, id string) (todoDomain.Todo, error) {
+	return s.repository.ReadDocument(ctx, id)
 }
 
-func (s TodoElasticService) FindTodos() ([]todoDomain.Todo, error) {
-	return []todoDomain.Todo{}, nil
+func (s TodoElasticService) FindTodos(ctx context.Context) ([]todoDomain.Todo, error) {
+	return s.repository.SearchTodos(ctx, "")
 }
 
-func (s TodoElasticService) CreateTodo(todo todoDomain.Todo) (string, error) {
+func (s TodoElasticService) CreateTodo(ctx context.Context, todo todoDomain.Todo) (string, error) {
 	todo.ID = uuid.New().String()
-	todo.Time = fmt.Sprintf("%d", time.Now().Unix())
-	return s.repository.CreateDocument(todo)
+	todo.CreatedAt = fmt.Sprintf("%d", time.Now().Unix())
+	todo.CheckDone()
+	return s.repository.CreateDocument(ctx, todo)
 }
 
-func (s TodoElasticService) UpdateTodo(id string, todo todoDomain.Todo) error {
+func (s TodoElasticService) UpdateTodo(ctx context.Context, id string, todo todoDomain.Todo) error {
 	todo.ID = id
-	return s.repository.UpdateDocument(todo)
+	todo.CheckDone()
+	return s.repository.UpdateDocument(ctx, todo)
 }
 
-func (s TodoElasticService) DeleteTodo(id string) error {
-	return s.repository.DeleteDocument(id)
+func (s TodoElasticService) DeleteTodo(ctx context.Context, id string) error {
+	return s.repository.DeleteDocument(ctx, id)
 }
 
-func (s TodoElasticService) SearchTodos(query string) ([]todoDomain.Todo, error) {
-	return s.repository.SearchTodos(query)
+func (s TodoElasticService) SearchTodos(ctx context.Context, query string) ([]todoDomain.Todo, error) {
+	return s.repository.SearchTodos(ctx, query)
 }

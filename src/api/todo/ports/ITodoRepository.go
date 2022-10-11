@@ -1,13 +1,14 @@
 package ports
 
 import (
+	"context"
 	todoDomain "github.com/strikersk/go-elastic/src/api/todo/domain"
 )
 
 type ITodoRepository interface {
-	FindTodo(string) (todoDomain.Todo, error)
-	SearchTodos(string) ([]todoDomain.Todo, error)
-	CreateDocument(todoDomain.Todo) (string, error)
-	UpdateDocument(todoDomain.Todo) error
-	DeleteDocument(string) error
+	SearchTodos(context.Context, string) ([]todoDomain.Todo, error)
+	CreateDocument(context.Context, todoDomain.Todo) (string, error)
+	ReadDocument(context.Context, string) (todoDomain.Todo, error)
+	UpdateDocument(context.Context, todoDomain.Todo) error
+	DeleteDocument(context.Context, string) error
 }

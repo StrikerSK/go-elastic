@@ -34,7 +34,7 @@ func (h TodoHandler) createTodo(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	responseId, err := h.service.CreateTodo(todo)
+	responseId, err := h.service.CreateTodo(ctx.Context(), todo)
 	if err != nil {
 		log.Printf("Repository error: %v\n", err)
 		return fiber.NewError(http.StatusBadRequest, err.Error())
@@ -50,7 +50,7 @@ func (h TodoHandler) readTodo(ctx *fiber.Ctx) error {
 		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	todo, err := h.service.FindTodo(documentID)
+	todo, err := h.service.FindTodo(ctx.Context(), documentID)
 	if err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(map[string]string{"data": err.Error()})
 	}
@@ -64,7 +64,7 @@ func (h TodoHandler) deleteTodo(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	if err = h.service.DeleteTodo(documentID); err != nil {
+	if err = h.service.DeleteTodo(ctx.Context(), documentID); err != nil {
 		log.Printf("Delete error: %v\n", err)
 	}
 
@@ -82,7 +82,7 @@ func (h TodoHandler) updateTodo(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	if err = h.service.UpdateTodo(documentID, todo); err != nil {
+	if err = h.service.UpdateTodo(ctx.Context(), documentID, todo); err != nil {
 		log.Printf("Repository error: %v\n", err)
 		return err
 	}
@@ -96,7 +96,7 @@ func (h TodoHandler) searchTodo(ctx *fiber.Ctx) error {
 	}{}
 
 	_ = ctx.QueryParser(&query)
-	todos, _ := h.service.SearchTodos(query.Query)
+	todos, _ := h.service.SearchTodos(ctx.Context(), query.Query)
 	return ctx.JSON(todos)
 }
 

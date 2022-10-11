@@ -90,12 +90,12 @@ func (r ElasticMappingFactory) CreateElasticObject(inputStruct interface{}) *Ela
 
 // mapStandardType - Add mapping of standard type of checked field
 func (r ElasticMappingFactory) mapStandardType(mapper *ElasticMappings, kind reflect.Kind) {
-	sliceType, err := r.resolveType(kind.String())
+	resolvedType, err := r.resolveType(kind.String())
 	if err != nil {
 		log.Println(err)
 	}
 
-	mapper.setType(sliceType)
+	mapper.setType(resolvedType)
 }
 
 // mapStructType - Add mapping of struct type of checked field

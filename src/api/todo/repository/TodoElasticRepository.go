@@ -12,7 +12,6 @@ import (
 
 type TodoElasticRepository struct {
 	client    *elastic.Client
-	context   context.Context
 	indexName string
 }
 
@@ -25,33 +24,32 @@ func NewElasticRepository(config elasticConfig.ElasticConfiguration) *TodoElasti
 
 	return &TodoElasticRepository{
 		client:    config.ElasticClient,
-		context:   config.Context,
 		indexName: indexName,
 	}
 }
 
-func (r TodoElasticRepository) DeleteDocument(documentID string) (err error) {
-	_, err = r.client.Delete().Index(r.indexName).Id(documentID).Do(r.context)
+func (r TodoElasticRepository) DeleteDocument(ctx context.Context, documentID string) (err error) {
+	_, err = r.client.Delete().Index(r.indexName).Id(documentID).Do(ctx)
 	return
 }
 
-func (r TodoElasticRepository) CreateDocument(document todoDomain.Todo) (string, error) {
-	return r.insertDocument("", document)
+func (r TodoElasticRepository) CreateDocument(ctx context.Context, document todoDomain.Todo) (string, error) {
+	return r.insertDocument(ctx, "", document)
 }
 
-func (r TodoElasticRepository) UpdateDocument(document todoDomain.Todo) error {
-	_, err := r.insertDocument(document.ID, document)
+func (r TodoElasticRepository) UpdateDocument(ctx context.Context, document todoDomain.Todo) error {
+	_, err := r.insertDocument(ctx, document.ID, document)
 	return err
 }
 
-func (r TodoElasticRepository) insertDocument(id string, document todoDomain.Todo) (string, error) {
+func (r TodoElasticRepository) insertDocument(ctx context.Context, id string, document todoDomain.Todo) (string, error) {
 	data, err := json.Marshal(document)
 	if err != nil {
 		log.Printf("Marshalling document error: %v\n", err)
 		return "", err
 	}
 
-	response, err := r.client.Index().Index(r.indexName).Id(id).BodyJson(string(data)).Do(r.context)
+	response, err := r.client.Index().Index(r.indexName).Id(id).BodyJson(string(data)).Do(ctx)
 	if err != nil {
 		log.Printf("Insert to index error: %v\n", err)
 		return "", err
@@ -61,8 +59,8 @@ func (r TodoElasticRepository) insertDocument(id string, document todoDomain.Tod
 	return response.Id, nil
 }
 
-func (r TodoElasticRepository) FindTodo(documentID string) (output todoDomain.Todo, err error) {
-	searchResult, err := r.client.Get().Index(r.indexName).Id(documentID).Do(r.context)
+func (r TodoElasticRepository) ReadDocument(ctx context.Context, documentID string) (output todoDomain.Todo, err error) {
+	searchResult, err := r.client.Get().Index(r.indexName).Id(documentID).Do(ctx)
 	if err != nil {
 		log.Printf("Searching error: %v\n", err)
 		return todoDomain.Todo{}, err
@@ -83,15 +81,13 @@ func (r TodoElasticRepository) FindTodo(documentID string) (output todoDomain.To
 	return
 }
 
-func (r TodoElasticRepository) SearchTodos(stringQuery string) ([]todoDomain.Todo, error) {
+func (r TodoElasticRepository) SearchTodos(ctx context.Context, stringQuery string) ([]todoDomain.Todo, error) {
 	output := make([]todoDomain.Todo, 0)
 
 	searchService := r.client.Search().Index(r.indexName).Query(elastic.NewQueryStringQuery(stringQuery))
 	searchResult, err := searchService.
-		//Sort("name", true). // sort by "user" field, ascending
-		//From(0).Size(2). // take documents 0-9
 		Pretty(true).
-		Do(r.context)
+		Do(ctx)
 
 	if err != nil {
 		return nil, err
